@@ -1,0 +1,949 @@
+[
+  {
+    "task": "Search for \"interest rate\" across both the title and content fields.",
+    "reference": {
+      "query": {
+        "multi_match": {
+          "query": "interest rate",
+          "fields": [
+            "title",
+            "content"
+          ]
+        }
+      }
+    },
+    "submission": {
+      "query": {
+        "multi_match": {
+          "query": "interest rate",
+          "fields": [
+            "title",
+            "content"
+          ]
+        }
+      }
+    },
+    "rubric": {
+      "0": "Score 0 \u2014 Completely invalid: [Query Structure] The JSON is unparseable or uses entirely wrong top-level keys (e.g. 'filter' or 'order' at the root instead of 'query'/'sort'). [Field Validity] Fields used do not exist in the index mapping at all. [Operator Correctness] No recognizable Elasticsearch query operator is used correctly. [Task Alignment] The query is completely unrelated to the stated task \u2014 it would either throw a parsing error or return results that have nothing to do with what was asked.",
+      "1": "Score 1 \u2014 Major errors: [Query Structure] A recognizable query type is attempted (e.g. bool, match, term) but the structure is fundamentally broken \u2014 e.g. a nested field queried without a nested wrapper, or a plain term used where a bool is required. [Field Validity] At least one critical field name is wrong or non-existent (e.g. 'headline' instead of 'title', 'tags' instead of 'topics'). [Operator Correctness] Wrong clause type used that changes semantics significantly (e.g. match_all instead of a specific filter). [Task Alignment] The query captures the right intent but the errors are severe enough that it would return empty results or completely wrong documents.",
+      "2": "Score 2 \u2014 Partially correct: [Query Structure] The outer query structure is correct (e.g. bool with must/filter) but at least one required clause is entirely missing (e.g. no filter, no sort, no date range, missing one branch of a multi-field search). [Field Validity] All field names that ARE present are correct. [Operator Correctness] Operators used are correct where applied; errors are of omission, not commission. [Task Alignment] The query partially satisfies the task \u2014 it gets some results right but the missing component means the result set is over-broad or incomplete.",
+      "3": "Score 3 \u2014 Mostly correct with minor issues: [Query Structure] All required clauses and nesting levels are present. [Field Validity] At most one field name is slightly wrong or suboptimal (e.g. using a non-existent field name in sort, or using 'match' on a keyword field where 'term' is preferred). [Operator Correctness] Operators are logically correct but one is imprecise \u2014 e.g. match vs term on a keyword field, or a sort on a non-indexed field. [Task Alignment] The query would return broadly correct results but with minor precision or correctness issues that a small one-line fix would resolve.",
+      "4": "Score 4 \u2014 Fully correct: [Query Structure] The query uses exactly the right clause type(s), correctly nested and composed (e.g. proper bool > must + filter, nested wrapper with correct path). [Field Validity] Every field name is exactly correct and matches the index mapping. [Operator Correctness] All operators (match/term/range/sort order/nested path) are exactly right for the data type of each field. [Task Alignment] The query returns precisely the documents the task describes \u2014 no over-retrieval, no under-retrieval, and the sort/pagination is correct if specified."
+    },
+    "score": 4,
+    "rationale": "[Score 4] [Query Structure] Correct multi_match query with 'query' and 'fields' both present. | [Field Validity] Both 'title' and 'content' are valid text fields. | [Operator Correctness] 'multi_match' is the correct operator for searching across multiple fields simultaneously. | [Task Alignment] Returns all documents where 'interest rate' appears in either title or content."
+  },
+  {
+    "task": "Find documents containing a georeference with country_code \"us\".",
+    "reference": {
+      "query": {
+        "nested": {
+          "path": "georeferences",
+          "query": {
+            "term": {
+              "georeferences.country_code": "us"
+            }
+          }
+        }
+      }
+    },
+    "submission": {
+      "query": {
+        "nested": {
+          "path": "georefs",
+          "query": {
+            "term": {
+              "georeferences.country_code": "us"
+            }
+          }
+        }
+      }
+    },
+    "rubric": {
+      "0": "Score 0 \u2014 Completely invalid: [Query Structure] The JSON is unparseable or uses entirely wrong top-level keys (e.g. 'filter' or 'order' at the root instead of 'query'/'sort'). [Field Validity] Fields used do not exist in the index mapping at all. [Operator Correctness] No recognizable Elasticsearch query operator is used correctly. [Task Alignment] The query is completely unrelated to the stated task \u2014 it would either throw a parsing error or return results that have nothing to do with what was asked.",
+      "1": "Score 1 \u2014 Major errors: [Query Structure] A recognizable query type is attempted (e.g. bool, match, term) but the structure is fundamentally broken \u2014 e.g. a nested field queried without a nested wrapper, or a plain term used where a bool is required. [Field Validity] At least one critical field name is wrong or non-existent (e.g. 'headline' instead of 'title', 'tags' instead of 'topics'). [Operator Correctness] Wrong clause type used that changes semantics significantly (e.g. match_all instead of a specific filter). [Task Alignment] The query captures the right intent but the errors are severe enough that it would return empty results or completely wrong documents.",
+      "2": "Score 2 \u2014 Partially correct: [Query Structure] The outer query structure is correct (e.g. bool with must/filter) but at least one required clause is entirely missing (e.g. no filter, no sort, no date range, missing one branch of a multi-field search). [Field Validity] All field names that ARE present are correct. [Operator Correctness] Operators used are correct where applied; errors are of omission, not commission. [Task Alignment] The query partially satisfies the task \u2014 it gets some results right but the missing component means the result set is over-broad or incomplete.",
+      "3": "Score 3 \u2014 Mostly correct with minor issues: [Query Structure] All required clauses and nesting levels are present. [Field Validity] At most one field name is slightly wrong or suboptimal (e.g. using a non-existent field name in sort, or using 'match' on a keyword field where 'term' is preferred). [Operator Correctness] Operators are logically correct but one is imprecise \u2014 e.g. match vs term on a keyword field, or a sort on a non-indexed field. [Task Alignment] The query would return broadly correct results but with minor precision or correctness issues that a small one-line fix would resolve.",
+      "4": "Score 4 \u2014 Fully correct: [Query Structure] The query uses exactly the right clause type(s), correctly nested and composed (e.g. proper bool > must + filter, nested wrapper with correct path). [Field Validity] Every field name is exactly correct and matches the index mapping. [Operator Correctness] All operators (match/term/range/sort order/nested path) are exactly right for the data type of each field. [Task Alignment] The query returns precisely the documents the task describes \u2014 no over-retrieval, no under-retrieval, and the sort/pagination is correct if specified."
+    },
+    "score": 2,
+    "rationale": "[Score 2] [Query Structure] Nested wrapper structure is correct (path + query present). | [Field Validity] The nested path 'georefs' does not match the mapping \u2014 the correct path is 'georeferences'. The inner field name is correct. | [Operator Correctness] 'term' is the right operator. | [Task Alignment] The query cannot traverse the nested objects because the path is wrong \u2014 returns zero results despite correct inner query logic."
+  },
+  {
+    "task": "Run a search for \"interest rate\" in title and content simultaneously.",
+    "reference": {
+      "query": {
+        "multi_match": {
+          "query": "interest rate",
+          "fields": [
+            "title",
+            "content"
+          ]
+        }
+      }
+    },
+    "submission": {
+      "query": {
+        "multi_match": {
+          "query": "interest rate",
+          "fields": [
+            "title"
+          ]
+        }
+      }
+    },
+    "rubric": {
+      "0": "Score 0 \u2014 Completely invalid: [Query Structure] The JSON is unparseable or uses entirely wrong top-level keys (e.g. 'filter' or 'order' at the root instead of 'query'/'sort'). [Field Validity] Fields used do not exist in the index mapping at all. [Operator Correctness] No recognizable Elasticsearch query operator is used correctly. [Task Alignment] The query is completely unrelated to the stated task \u2014 it would either throw a parsing error or return results that have nothing to do with what was asked.",
+      "1": "Score 1 \u2014 Major errors: [Query Structure] A recognizable query type is attempted (e.g. bool, match, term) but the structure is fundamentally broken \u2014 e.g. a nested field queried without a nested wrapper, or a plain term used where a bool is required. [Field Validity] At least one critical field name is wrong or non-existent (e.g. 'headline' instead of 'title', 'tags' instead of 'topics'). [Operator Correctness] Wrong clause type used that changes semantics significantly (e.g. match_all instead of a specific filter). [Task Alignment] The query captures the right intent but the errors are severe enough that it would return empty results or completely wrong documents.",
+      "2": "Score 2 \u2014 Partially correct: [Query Structure] The outer query structure is correct (e.g. bool with must/filter) but at least one required clause is entirely missing (e.g. no filter, no sort, no date range, missing one branch of a multi-field search). [Field Validity] All field names that ARE present are correct. [Operator Correctness] Operators used are correct where applied; errors are of omission, not commission. [Task Alignment] The query partially satisfies the task \u2014 it gets some results right but the missing component means the result set is over-broad or incomplete.",
+      "3": "Score 3 \u2014 Mostly correct with minor issues: [Query Structure] All required clauses and nesting levels are present. [Field Validity] At most one field name is slightly wrong or suboptimal (e.g. using a non-existent field name in sort, or using 'match' on a keyword field where 'term' is preferred). [Operator Correctness] Operators are logically correct but one is imprecise \u2014 e.g. match vs term on a keyword field, or a sort on a non-indexed field. [Task Alignment] The query would return broadly correct results but with minor precision or correctness issues that a small one-line fix would resolve.",
+      "4": "Score 4 \u2014 Fully correct: [Query Structure] The query uses exactly the right clause type(s), correctly nested and composed (e.g. proper bool > must + filter, nested wrapper with correct path). [Field Validity] Every field name is exactly correct and matches the index mapping. [Operator Correctness] All operators (match/term/range/sort order/nested path) are exactly right for the data type of each field. [Task Alignment] The query returns precisely the documents the task describes \u2014 no over-retrieval, no under-retrieval, and the sort/pagination is correct if specified."
+    },
+    "score": 3,
+    "rationale": "[Score 3] [Query Structure] Correct multi_match structure. | [Field Validity] 'title' is a valid field. | [Operator Correctness] 'multi_match' is correct but underused \u2014 only one field is listed. | [Task Alignment] Searches only 'title', missing all documents where 'interest rate' appears only in 'content'. Half the required fields are covered."
+  },
+  {
+    "task": "Multi-field search for \"money-fx\" covering title and content.",
+    "reference": {
+      "query": {
+        "multi_match": {
+          "query": "money-fx",
+          "fields": [
+            "title",
+            "content"
+          ]
+        }
+      }
+    },
+    "submission": {
+      "query": {
+        "multi_match": {
+          "query": "money-fx",
+          "fields": [
+            "title"
+          ]
+        }
+      }
+    },
+    "rubric": {
+      "0": "Score 0 \u2014 Completely invalid: [Query Structure] The JSON is unparseable or uses entirely wrong top-level keys (e.g. 'filter' or 'order' at the root instead of 'query'/'sort'). [Field Validity] Fields used do not exist in the index mapping at all. [Operator Correctness] No recognizable Elasticsearch query operator is used correctly. [Task Alignment] The query is completely unrelated to the stated task \u2014 it would either throw a parsing error or return results that have nothing to do with what was asked.",
+      "1": "Score 1 \u2014 Major errors: [Query Structure] A recognizable query type is attempted (e.g. bool, match, term) but the structure is fundamentally broken \u2014 e.g. a nested field queried without a nested wrapper, or a plain term used where a bool is required. [Field Validity] At least one critical field name is wrong or non-existent (e.g. 'headline' instead of 'title', 'tags' instead of 'topics'). [Operator Correctness] Wrong clause type used that changes semantics significantly (e.g. match_all instead of a specific filter). [Task Alignment] The query captures the right intent but the errors are severe enough that it would return empty results or completely wrong documents.",
+      "2": "Score 2 \u2014 Partially correct: [Query Structure] The outer query structure is correct (e.g. bool with must/filter) but at least one required clause is entirely missing (e.g. no filter, no sort, no date range, missing one branch of a multi-field search). [Field Validity] All field names that ARE present are correct. [Operator Correctness] Operators used are correct where applied; errors are of omission, not commission. [Task Alignment] The query partially satisfies the task \u2014 it gets some results right but the missing component means the result set is over-broad or incomplete.",
+      "3": "Score 3 \u2014 Mostly correct with minor issues: [Query Structure] All required clauses and nesting levels are present. [Field Validity] At most one field name is slightly wrong or suboptimal (e.g. using a non-existent field name in sort, or using 'match' on a keyword field where 'term' is preferred). [Operator Correctness] Operators are logically correct but one is imprecise \u2014 e.g. match vs term on a keyword field, or a sort on a non-indexed field. [Task Alignment] The query would return broadly correct results but with minor precision or correctness issues that a small one-line fix would resolve.",
+      "4": "Score 4 \u2014 Fully correct: [Query Structure] The query uses exactly the right clause type(s), correctly nested and composed (e.g. proper bool > must + filter, nested wrapper with correct path). [Field Validity] Every field name is exactly correct and matches the index mapping. [Operator Correctness] All operators (match/term/range/sort order/nested path) are exactly right for the data type of each field. [Task Alignment] The query returns precisely the documents the task describes \u2014 no over-retrieval, no under-retrieval, and the sort/pagination is correct if specified."
+    },
+    "score": 3,
+    "rationale": "[Score 3] [Query Structure] Correct multi_match structure. | [Field Validity] 'title' is a valid field. | [Operator Correctness] 'multi_match' is correct but underused \u2014 only one field is listed. | [Task Alignment] Searches only 'title', missing all documents where 'money-fx' appears only in 'content'. Half the required fields are covered."
+  },
+  {
+    "task": "Filter the index to documents tagged \"acq\" in their topics list.",
+    "reference": {
+      "query": {
+        "term": {
+          "topics": "acq"
+        }
+      }
+    },
+    "submission": {
+      "query": {
+        "match": {
+          "topics": "acq"
+        }
+      }
+    },
+    "rubric": {
+      "0": "Score 0 \u2014 Completely invalid: [Query Structure] The JSON is unparseable or uses entirely wrong top-level keys (e.g. 'filter' or 'order' at the root instead of 'query'/'sort'). [Field Validity] Fields used do not exist in the index mapping at all. [Operator Correctness] No recognizable Elasticsearch query operator is used correctly. [Task Alignment] The query is completely unrelated to the stated task \u2014 it would either throw a parsing error or return results that have nothing to do with what was asked.",
+      "1": "Score 1 \u2014 Major errors: [Query Structure] A recognizable query type is attempted (e.g. bool, match, term) but the structure is fundamentally broken \u2014 e.g. a nested field queried without a nested wrapper, or a plain term used where a bool is required. [Field Validity] At least one critical field name is wrong or non-existent (e.g. 'headline' instead of 'title', 'tags' instead of 'topics'). [Operator Correctness] Wrong clause type used that changes semantics significantly (e.g. match_all instead of a specific filter). [Task Alignment] The query captures the right intent but the errors are severe enough that it would return empty results or completely wrong documents.",
+      "2": "Score 2 \u2014 Partially correct: [Query Structure] The outer query structure is correct (e.g. bool with must/filter) but at least one required clause is entirely missing (e.g. no filter, no sort, no date range, missing one branch of a multi-field search). [Field Validity] All field names that ARE present are correct. [Operator Correctness] Operators used are correct where applied; errors are of omission, not commission. [Task Alignment] The query partially satisfies the task \u2014 it gets some results right but the missing component means the result set is over-broad or incomplete.",
+      "3": "Score 3 \u2014 Mostly correct with minor issues: [Query Structure] All required clauses and nesting levels are present. [Field Validity] At most one field name is slightly wrong or suboptimal (e.g. using a non-existent field name in sort, or using 'match' on a keyword field where 'term' is preferred). [Operator Correctness] Operators are logically correct but one is imprecise \u2014 e.g. match vs term on a keyword field, or a sort on a non-indexed field. [Task Alignment] The query would return broadly correct results but with minor precision or correctness issues that a small one-line fix would resolve.",
+      "4": "Score 4 \u2014 Fully correct: [Query Structure] The query uses exactly the right clause type(s), correctly nested and composed (e.g. proper bool > must + filter, nested wrapper with correct path). [Field Validity] Every field name is exactly correct and matches the index mapping. [Operator Correctness] All operators (match/term/range/sort order/nested path) are exactly right for the data type of each field. [Task Alignment] The query returns precisely the documents the task describes \u2014 no over-retrieval, no under-retrieval, and the sort/pagination is correct if specified."
+    },
+    "score": 3,
+    "rationale": "[Score 3] [Query Structure] Query structure is valid. | [Field Validity] 'topics' field is correct. | [Operator Correctness] 'match' is imprecise on a keyword field \u2014 it performs analysis that may split or normalize the value, causing unexpected matches or misses. 'term' is required for exact keyword matching. | [Task Alignment] May return broadly correct results but with precision issues for multi-word topic values like 'acq'."
+  },
+  {
+    "task": "Multi-field search for \"interest rate\" covering title and content.",
+    "reference": {
+      "query": {
+        "multi_match": {
+          "query": "interest rate",
+          "fields": [
+            "title",
+            "content"
+          ]
+        }
+      }
+    },
+    "submission": {
+      "query": {
+        "bool": {
+          "filter": {
+            "match": {
+              "content": "oil"
+            }
+          }
+        }
+      }
+    },
+    "rubric": {
+      "0": "Score 0 \u2014 Completely invalid: [Query Structure] The JSON is unparseable or uses entirely wrong top-level keys (e.g. 'filter' or 'order' at the root instead of 'query'/'sort'). [Field Validity] Fields used do not exist in the index mapping at all. [Operator Correctness] No recognizable Elasticsearch query operator is used correctly. [Task Alignment] The query is completely unrelated to the stated task \u2014 it would either throw a parsing error or return results that have nothing to do with what was asked.",
+      "1": "Score 1 \u2014 Major errors: [Query Structure] A recognizable query type is attempted (e.g. bool, match, term) but the structure is fundamentally broken \u2014 e.g. a nested field queried without a nested wrapper, or a plain term used where a bool is required. [Field Validity] At least one critical field name is wrong or non-existent (e.g. 'headline' instead of 'title', 'tags' instead of 'topics'). [Operator Correctness] Wrong clause type used that changes semantics significantly (e.g. match_all instead of a specific filter). [Task Alignment] The query captures the right intent but the errors are severe enough that it would return empty results or completely wrong documents.",
+      "2": "Score 2 \u2014 Partially correct: [Query Structure] The outer query structure is correct (e.g. bool with must/filter) but at least one required clause is entirely missing (e.g. no filter, no sort, no date range, missing one branch of a multi-field search). [Field Validity] All field names that ARE present are correct. [Operator Correctness] Operators used are correct where applied; errors are of omission, not commission. [Task Alignment] The query partially satisfies the task \u2014 it gets some results right but the missing component means the result set is over-broad or incomplete.",
+      "3": "Score 3 \u2014 Mostly correct with minor issues: [Query Structure] All required clauses and nesting levels are present. [Field Validity] At most one field name is slightly wrong or suboptimal (e.g. using a non-existent field name in sort, or using 'match' on a keyword field where 'term' is preferred). [Operator Correctness] Operators are logically correct but one is imprecise \u2014 e.g. match vs term on a keyword field, or a sort on a non-indexed field. [Task Alignment] The query would return broadly correct results but with minor precision or correctness issues that a small one-line fix would resolve.",
+      "4": "Score 4 \u2014 Fully correct: [Query Structure] The query uses exactly the right clause type(s), correctly nested and composed (e.g. proper bool > must + filter, nested wrapper with correct path). [Field Validity] Every field name is exactly correct and matches the index mapping. [Operator Correctness] All operators (match/term/range/sort order/nested path) are exactly right for the data type of each field. [Task Alignment] The query returns precisely the documents the task describes \u2014 no over-retrieval, no under-retrieval, and the sort/pagination is correct if specified."
+    },
+    "score": 0,
+    "rationale": "[Score 0] [Query Structure] Invalid Elasticsearch DSL \u2014 wrong top-level keys or missing 'query' wrapper. | [Field Validity] No valid mapping fields are correctly referenced. | [Operator Correctness] No valid operator is applied. | [Task Alignment] Would fail to parse or return completely unrelated documents."
+  },
+  {
+    "task": "Search for articles that discuss \"grain\" anywhere in their content.",
+    "reference": {
+      "query": {
+        "match": {
+          "content": "grain"
+        }
+      }
+    },
+    "submission": {
+      "filter": {
+        "term": {
+          "topics": "trade"
+        }
+      },
+      "sort": "date"
+    },
+    "rubric": {
+      "0": "Score 0 \u2014 Completely invalid: [Query Structure] The JSON is unparseable or uses entirely wrong top-level keys (e.g. 'filter' or 'order' at the root instead of 'query'/'sort'). [Field Validity] Fields used do not exist in the index mapping at all. [Operator Correctness] No recognizable Elasticsearch query operator is used correctly. [Task Alignment] The query is completely unrelated to the stated task \u2014 it would either throw a parsing error or return results that have nothing to do with what was asked.",
+      "1": "Score 1 \u2014 Major errors: [Query Structure] A recognizable query type is attempted (e.g. bool, match, term) but the structure is fundamentally broken \u2014 e.g. a nested field queried without a nested wrapper, or a plain term used where a bool is required. [Field Validity] At least one critical field name is wrong or non-existent (e.g. 'headline' instead of 'title', 'tags' instead of 'topics'). [Operator Correctness] Wrong clause type used that changes semantics significantly (e.g. match_all instead of a specific filter). [Task Alignment] The query captures the right intent but the errors are severe enough that it would return empty results or completely wrong documents.",
+      "2": "Score 2 \u2014 Partially correct: [Query Structure] The outer query structure is correct (e.g. bool with must/filter) but at least one required clause is entirely missing (e.g. no filter, no sort, no date range, missing one branch of a multi-field search). [Field Validity] All field names that ARE present are correct. [Operator Correctness] Operators used are correct where applied; errors are of omission, not commission. [Task Alignment] The query partially satisfies the task \u2014 it gets some results right but the missing component means the result set is over-broad or incomplete.",
+      "3": "Score 3 \u2014 Mostly correct with minor issues: [Query Structure] All required clauses and nesting levels are present. [Field Validity] At most one field name is slightly wrong or suboptimal (e.g. using a non-existent field name in sort, or using 'match' on a keyword field where 'term' is preferred). [Operator Correctness] Operators are logically correct but one is imprecise \u2014 e.g. match vs term on a keyword field, or a sort on a non-indexed field. [Task Alignment] The query would return broadly correct results but with minor precision or correctness issues that a small one-line fix would resolve.",
+      "4": "Score 4 \u2014 Fully correct: [Query Structure] The query uses exactly the right clause type(s), correctly nested and composed (e.g. proper bool > must + filter, nested wrapper with correct path). [Field Validity] Every field name is exactly correct and matches the index mapping. [Operator Correctness] All operators (match/term/range/sort order/nested path) are exactly right for the data type of each field. [Task Alignment] The query returns precisely the documents the task describes \u2014 no over-retrieval, no under-retrieval, and the sort/pagination is correct if specified."
+    },
+    "score": 0,
+    "rationale": "[Score 0] [Query Structure] Invalid top-level keys \u2014 not a valid Elasticsearch query DSL structure. | [Field Validity] Fields referenced either don't exist or are in wrong positions. | [Operator Correctness] No valid operator is correctly applied. | [Task Alignment] This query would either fail to parse or return completely unrelated results."
+  },
+  {
+    "task": "Retrieve every document where the content field contains the word \"earn\".",
+    "reference": {
+      "query": {
+        "match": {
+          "content": "earn"
+        }
+      }
+    },
+    "submission": {
+      "query": {
+        "match": {
+          "body": "earn"
+        }
+      }
+    },
+    "rubric": {
+      "0": "Score 0 \u2014 Completely invalid: [Query Structure] The JSON is unparseable or uses entirely wrong top-level keys (e.g. 'filter' or 'order' at the root instead of 'query'/'sort'). [Field Validity] Fields used do not exist in the index mapping at all. [Operator Correctness] No recognizable Elasticsearch query operator is used correctly. [Task Alignment] The query is completely unrelated to the stated task \u2014 it would either throw a parsing error or return results that have nothing to do with what was asked.",
+      "1": "Score 1 \u2014 Major errors: [Query Structure] A recognizable query type is attempted (e.g. bool, match, term) but the structure is fundamentally broken \u2014 e.g. a nested field queried without a nested wrapper, or a plain term used where a bool is required. [Field Validity] At least one critical field name is wrong or non-existent (e.g. 'headline' instead of 'title', 'tags' instead of 'topics'). [Operator Correctness] Wrong clause type used that changes semantics significantly (e.g. match_all instead of a specific filter). [Task Alignment] The query captures the right intent but the errors are severe enough that it would return empty results or completely wrong documents.",
+      "2": "Score 2 \u2014 Partially correct: [Query Structure] The outer query structure is correct (e.g. bool with must/filter) but at least one required clause is entirely missing (e.g. no filter, no sort, no date range, missing one branch of a multi-field search). [Field Validity] All field names that ARE present are correct. [Operator Correctness] Operators used are correct where applied; errors are of omission, not commission. [Task Alignment] The query partially satisfies the task \u2014 it gets some results right but the missing component means the result set is over-broad or incomplete.",
+      "3": "Score 3 \u2014 Mostly correct with minor issues: [Query Structure] All required clauses and nesting levels are present. [Field Validity] At most one field name is slightly wrong or suboptimal (e.g. using a non-existent field name in sort, or using 'match' on a keyword field where 'term' is preferred). [Operator Correctness] Operators are logically correct but one is imprecise \u2014 e.g. match vs term on a keyword field, or a sort on a non-indexed field. [Task Alignment] The query would return broadly correct results but with minor precision or correctness issues that a small one-line fix would resolve.",
+      "4": "Score 4 \u2014 Fully correct: [Query Structure] The query uses exactly the right clause type(s), correctly nested and composed (e.g. proper bool > must + filter, nested wrapper with correct path). [Field Validity] Every field name is exactly correct and matches the index mapping. [Operator Correctness] All operators (match/term/range/sort order/nested path) are exactly right for the data type of each field. [Task Alignment] The query returns precisely the documents the task describes \u2014 no over-retrieval, no under-retrieval, and the sort/pagination is correct if specified."
+    },
+    "score": 2,
+    "rationale": "[Score 2] [Query Structure] Correct match clause structure. | [Field Validity] The field 'body' does not exist in the mapping \u2014 correct field is 'content'. This causes zero results. | [Operator Correctness] 'match' operator is appropriate for text search. | [Task Alignment] Intent is correct but the non-existent field means no documents are retrieved."
+  },
+  {
+    "task": "Find documents where either the title or the content contains \"oil prices\".",
+    "reference": {
+      "query": {
+        "multi_match": {
+          "query": "oil prices",
+          "fields": [
+            "title",
+            "content"
+          ]
+        }
+      }
+    },
+    "submission": {
+      "query": {
+        "bool": {
+          "filter": {
+            "match": {
+              "content": "oil"
+            }
+          }
+        }
+      }
+    },
+    "rubric": {
+      "0": "Score 0 \u2014 Completely invalid: [Query Structure] The JSON is unparseable or uses entirely wrong top-level keys (e.g. 'filter' or 'order' at the root instead of 'query'/'sort'). [Field Validity] Fields used do not exist in the index mapping at all. [Operator Correctness] No recognizable Elasticsearch query operator is used correctly. [Task Alignment] The query is completely unrelated to the stated task \u2014 it would either throw a parsing error or return results that have nothing to do with what was asked.",
+      "1": "Score 1 \u2014 Major errors: [Query Structure] A recognizable query type is attempted (e.g. bool, match, term) but the structure is fundamentally broken \u2014 e.g. a nested field queried without a nested wrapper, or a plain term used where a bool is required. [Field Validity] At least one critical field name is wrong or non-existent (e.g. 'headline' instead of 'title', 'tags' instead of 'topics'). [Operator Correctness] Wrong clause type used that changes semantics significantly (e.g. match_all instead of a specific filter). [Task Alignment] The query captures the right intent but the errors are severe enough that it would return empty results or completely wrong documents.",
+      "2": "Score 2 \u2014 Partially correct: [Query Structure] The outer query structure is correct (e.g. bool with must/filter) but at least one required clause is entirely missing (e.g. no filter, no sort, no date range, missing one branch of a multi-field search). [Field Validity] All field names that ARE present are correct. [Operator Correctness] Operators used are correct where applied; errors are of omission, not commission. [Task Alignment] The query partially satisfies the task \u2014 it gets some results right but the missing component means the result set is over-broad or incomplete.",
+      "3": "Score 3 \u2014 Mostly correct with minor issues: [Query Structure] All required clauses and nesting levels are present. [Field Validity] At most one field name is slightly wrong or suboptimal (e.g. using a non-existent field name in sort, or using 'match' on a keyword field where 'term' is preferred). [Operator Correctness] Operators are logically correct but one is imprecise \u2014 e.g. match vs term on a keyword field, or a sort on a non-indexed field. [Task Alignment] The query would return broadly correct results but with minor precision or correctness issues that a small one-line fix would resolve.",
+      "4": "Score 4 \u2014 Fully correct: [Query Structure] The query uses exactly the right clause type(s), correctly nested and composed (e.g. proper bool > must + filter, nested wrapper with correct path). [Field Validity] Every field name is exactly correct and matches the index mapping. [Operator Correctness] All operators (match/term/range/sort order/nested path) are exactly right for the data type of each field. [Task Alignment] The query returns precisely the documents the task describes \u2014 no over-retrieval, no under-retrieval, and the sort/pagination is correct if specified."
+    },
+    "score": 0,
+    "rationale": "[Score 0] [Query Structure] Invalid Elasticsearch DSL \u2014 wrong top-level keys or missing 'query' wrapper. | [Field Validity] No valid mapping fields are correctly referenced. | [Operator Correctness] No valid operator is applied. | [Task Alignment] Would fail to parse or return completely unrelated documents."
+  },
+  {
+    "task": "Retrieve every document where the content field contains the word \"money-fx\".",
+    "reference": {
+      "query": {
+        "match": {
+          "content": "money-fx"
+        }
+      }
+    },
+    "submission": {
+      "query": {
+        "match": {
+          "content": "money-fx"
+        }
+      }
+    },
+    "rubric": {
+      "0": "Score 0 \u2014 Completely invalid: [Query Structure] The JSON is unparseable or uses entirely wrong top-level keys (e.g. 'filter' or 'order' at the root instead of 'query'/'sort'). [Field Validity] Fields used do not exist in the index mapping at all. [Operator Correctness] No recognizable Elasticsearch query operator is used correctly. [Task Alignment] The query is completely unrelated to the stated task \u2014 it would either throw a parsing error or return results that have nothing to do with what was asked.",
+      "1": "Score 1 \u2014 Major errors: [Query Structure] A recognizable query type is attempted (e.g. bool, match, term) but the structure is fundamentally broken \u2014 e.g. a nested field queried without a nested wrapper, or a plain term used where a bool is required. [Field Validity] At least one critical field name is wrong or non-existent (e.g. 'headline' instead of 'title', 'tags' instead of 'topics'). [Operator Correctness] Wrong clause type used that changes semantics significantly (e.g. match_all instead of a specific filter). [Task Alignment] The query captures the right intent but the errors are severe enough that it would return empty results or completely wrong documents.",
+      "2": "Score 2 \u2014 Partially correct: [Query Structure] The outer query structure is correct (e.g. bool with must/filter) but at least one required clause is entirely missing (e.g. no filter, no sort, no date range, missing one branch of a multi-field search). [Field Validity] All field names that ARE present are correct. [Operator Correctness] Operators used are correct where applied; errors are of omission, not commission. [Task Alignment] The query partially satisfies the task \u2014 it gets some results right but the missing component means the result set is over-broad or incomplete.",
+      "3": "Score 3 \u2014 Mostly correct with minor issues: [Query Structure] All required clauses and nesting levels are present. [Field Validity] At most one field name is slightly wrong or suboptimal (e.g. using a non-existent field name in sort, or using 'match' on a keyword field where 'term' is preferred). [Operator Correctness] Operators are logically correct but one is imprecise \u2014 e.g. match vs term on a keyword field, or a sort on a non-indexed field. [Task Alignment] The query would return broadly correct results but with minor precision or correctness issues that a small one-line fix would resolve.",
+      "4": "Score 4 \u2014 Fully correct: [Query Structure] The query uses exactly the right clause type(s), correctly nested and composed (e.g. proper bool > must + filter, nested wrapper with correct path). [Field Validity] Every field name is exactly correct and matches the index mapping. [Operator Correctness] All operators (match/term/range/sort order/nested path) are exactly right for the data type of each field. [Task Alignment] The query returns precisely the documents the task describes \u2014 no over-retrieval, no under-retrieval, and the sort/pagination is correct if specified."
+    },
+    "score": 4,
+    "rationale": "[Score 4] [Query Structure] Correct single match clause at the query level. | [Field Validity] 'content' is a valid text field in the mapping. | [Operator Correctness] 'match' is the correct operator for full-text search on a text field. | [Task Alignment] Returns exactly documents whose content mentions 'money-fx'."
+  },
+  {
+    "task": "Find all documents associated with country code \"fr\".",
+    "reference": {
+      "query": {
+        "term": {
+          "countryKeys": "fr"
+        }
+      }
+    },
+    "submission": {
+      "query": {
+        "term": {
+          "countries": "fr"
+        }
+      }
+    },
+    "rubric": {
+      "0": "Score 0 \u2014 Completely invalid: [Query Structure] The JSON is unparseable or uses entirely wrong top-level keys (e.g. 'filter' or 'order' at the root instead of 'query'/'sort'). [Field Validity] Fields used do not exist in the index mapping at all. [Operator Correctness] No recognizable Elasticsearch query operator is used correctly. [Task Alignment] The query is completely unrelated to the stated task \u2014 it would either throw a parsing error or return results that have nothing to do with what was asked.",
+      "1": "Score 1 \u2014 Major errors: [Query Structure] A recognizable query type is attempted (e.g. bool, match, term) but the structure is fundamentally broken \u2014 e.g. a nested field queried without a nested wrapper, or a plain term used where a bool is required. [Field Validity] At least one critical field name is wrong or non-existent (e.g. 'headline' instead of 'title', 'tags' instead of 'topics'). [Operator Correctness] Wrong clause type used that changes semantics significantly (e.g. match_all instead of a specific filter). [Task Alignment] The query captures the right intent but the errors are severe enough that it would return empty results or completely wrong documents.",
+      "2": "Score 2 \u2014 Partially correct: [Query Structure] The outer query structure is correct (e.g. bool with must/filter) but at least one required clause is entirely missing (e.g. no filter, no sort, no date range, missing one branch of a multi-field search). [Field Validity] All field names that ARE present are correct. [Operator Correctness] Operators used are correct where applied; errors are of omission, not commission. [Task Alignment] The query partially satisfies the task \u2014 it gets some results right but the missing component means the result set is over-broad or incomplete.",
+      "3": "Score 3 \u2014 Mostly correct with minor issues: [Query Structure] All required clauses and nesting levels are present. [Field Validity] At most one field name is slightly wrong or suboptimal (e.g. using a non-existent field name in sort, or using 'match' on a keyword field where 'term' is preferred). [Operator Correctness] Operators are logically correct but one is imprecise \u2014 e.g. match vs term on a keyword field, or a sort on a non-indexed field. [Task Alignment] The query would return broadly correct results but with minor precision or correctness issues that a small one-line fix would resolve.",
+      "4": "Score 4 \u2014 Fully correct: [Query Structure] The query uses exactly the right clause type(s), correctly nested and composed (e.g. proper bool > must + filter, nested wrapper with correct path). [Field Validity] Every field name is exactly correct and matches the index mapping. [Operator Correctness] All operators (match/term/range/sort order/nested path) are exactly right for the data type of each field. [Task Alignment] The query returns precisely the documents the task describes \u2014 no over-retrieval, no under-retrieval, and the sort/pagination is correct if specified."
+    },
+    "score": 1,
+    "rationale": "[Score 1] [Query Structure] Correct term query structure. | [Field Validity] 'countries' does not exist in the mapping at all \u2014 the correct field is 'countryKeys'. Fatal field name error. | [Operator Correctness] 'term' is the right operator. | [Task Alignment] Returns zero results because the field doesn't exist in the index."
+  },
+  {
+    "task": "Search inside the georeferences array for entries with country_code \"ca\".",
+    "reference": {
+      "query": {
+        "nested": {
+          "path": "georeferences",
+          "query": {
+            "term": {
+              "georeferences.country_code": "ca"
+            }
+          }
+        }
+      }
+    },
+    "submission": {
+      "query": {
+        "bool": {
+          "filter": {
+            "match": {
+              "content": "oil"
+            }
+          }
+        }
+      }
+    },
+    "rubric": {
+      "0": "Score 0 \u2014 Completely invalid: [Query Structure] The JSON is unparseable or uses entirely wrong top-level keys (e.g. 'filter' or 'order' at the root instead of 'query'/'sort'). [Field Validity] Fields used do not exist in the index mapping at all. [Operator Correctness] No recognizable Elasticsearch query operator is used correctly. [Task Alignment] The query is completely unrelated to the stated task \u2014 it would either throw a parsing error or return results that have nothing to do with what was asked.",
+      "1": "Score 1 \u2014 Major errors: [Query Structure] A recognizable query type is attempted (e.g. bool, match, term) but the structure is fundamentally broken \u2014 e.g. a nested field queried without a nested wrapper, or a plain term used where a bool is required. [Field Validity] At least one critical field name is wrong or non-existent (e.g. 'headline' instead of 'title', 'tags' instead of 'topics'). [Operator Correctness] Wrong clause type used that changes semantics significantly (e.g. match_all instead of a specific filter). [Task Alignment] The query captures the right intent but the errors are severe enough that it would return empty results or completely wrong documents.",
+      "2": "Score 2 \u2014 Partially correct: [Query Structure] The outer query structure is correct (e.g. bool with must/filter) but at least one required clause is entirely missing (e.g. no filter, no sort, no date range, missing one branch of a multi-field search). [Field Validity] All field names that ARE present are correct. [Operator Correctness] Operators used are correct where applied; errors are of omission, not commission. [Task Alignment] The query partially satisfies the task \u2014 it gets some results right but the missing component means the result set is over-broad or incomplete.",
+      "3": "Score 3 \u2014 Mostly correct with minor issues: [Query Structure] All required clauses and nesting levels are present. [Field Validity] At most one field name is slightly wrong or suboptimal (e.g. using a non-existent field name in sort, or using 'match' on a keyword field where 'term' is preferred). [Operator Correctness] Operators are logically correct but one is imprecise \u2014 e.g. match vs term on a keyword field, or a sort on a non-indexed field. [Task Alignment] The query would return broadly correct results but with minor precision or correctness issues that a small one-line fix would resolve.",
+      "4": "Score 4 \u2014 Fully correct: [Query Structure] The query uses exactly the right clause type(s), correctly nested and composed (e.g. proper bool > must + filter, nested wrapper with correct path). [Field Validity] Every field name is exactly correct and matches the index mapping. [Operator Correctness] All operators (match/term/range/sort order/nested path) are exactly right for the data type of each field. [Task Alignment] The query returns precisely the documents the task describes \u2014 no over-retrieval, no under-retrieval, and the sort/pagination is correct if specified."
+    },
+    "score": 0,
+    "rationale": "[Score 0] [Query Structure] Completely invalid Elasticsearch DSL \u2014 no 'nested' wrapper, no valid 'query' key at the right level. | [Field Validity] Nested path and field are not correctly referenced. | [Operator Correctness] No valid operator is applied inside the nested context. | [Task Alignment] Would fail to parse or return entirely unrelated documents."
+  },
+  {
+    "task": "Get \"earn\" articles with the most recent ones at the top.",
+    "reference": {
+      "query": {
+        "match": {
+          "content": "earn"
+        }
+      },
+      "sort": [
+        {
+          "date": {
+            "order": "desc"
+          }
+        }
+      ]
+    },
+    "submission": {
+      "query": {
+        "match": {
+          "content": "earn"
+        }
+      }
+    },
+    "rubric": {
+      "0": "Score 0 \u2014 Completely invalid: [Query Structure] The JSON is unparseable or uses entirely wrong top-level keys (e.g. 'filter' or 'order' at the root instead of 'query'/'sort'). [Field Validity] Fields used do not exist in the index mapping at all. [Operator Correctness] No recognizable Elasticsearch query operator is used correctly. [Task Alignment] The query is completely unrelated to the stated task \u2014 it would either throw a parsing error or return results that have nothing to do with what was asked.",
+      "1": "Score 1 \u2014 Major errors: [Query Structure] A recognizable query type is attempted (e.g. bool, match, term) but the structure is fundamentally broken \u2014 e.g. a nested field queried without a nested wrapper, or a plain term used where a bool is required. [Field Validity] At least one critical field name is wrong or non-existent (e.g. 'headline' instead of 'title', 'tags' instead of 'topics'). [Operator Correctness] Wrong clause type used that changes semantics significantly (e.g. match_all instead of a specific filter). [Task Alignment] The query captures the right intent but the errors are severe enough that it would return empty results or completely wrong documents.",
+      "2": "Score 2 \u2014 Partially correct: [Query Structure] The outer query structure is correct (e.g. bool with must/filter) but at least one required clause is entirely missing (e.g. no filter, no sort, no date range, missing one branch of a multi-field search). [Field Validity] All field names that ARE present are correct. [Operator Correctness] Operators used are correct where applied; errors are of omission, not commission. [Task Alignment] The query partially satisfies the task \u2014 it gets some results right but the missing component means the result set is over-broad or incomplete.",
+      "3": "Score 3 \u2014 Mostly correct with minor issues: [Query Structure] All required clauses and nesting levels are present. [Field Validity] At most one field name is slightly wrong or suboptimal (e.g. using a non-existent field name in sort, or using 'match' on a keyword field where 'term' is preferred). [Operator Correctness] Operators are logically correct but one is imprecise \u2014 e.g. match vs term on a keyword field, or a sort on a non-indexed field. [Task Alignment] The query would return broadly correct results but with minor precision or correctness issues that a small one-line fix would resolve.",
+      "4": "Score 4 \u2014 Fully correct: [Query Structure] The query uses exactly the right clause type(s), correctly nested and composed (e.g. proper bool > must + filter, nested wrapper with correct path). [Field Validity] Every field name is exactly correct and matches the index mapping. [Operator Correctness] All operators (match/term/range/sort order/nested path) are exactly right for the data type of each field. [Task Alignment] The query returns precisely the documents the task describes \u2014 no over-retrieval, no under-retrieval, and the sort/pagination is correct if specified."
+    },
+    "score": 2,
+    "rationale": "[Score 2] [Query Structure] The query clause is correct but the 'sort' clause is entirely absent. | [Field Validity] The query field is correct. | [Operator Correctness] The query operator is correct; sort operator is absent. | [Task Alignment] Returns the right documents but in arbitrary order, not the required date order. Half the task is complete."
+  },
+  {
+    "task": "Which Reuters articles have \"grain\" mentioned in the content?",
+    "reference": {
+      "query": {
+        "match": {
+          "content": "grain"
+        }
+      }
+    },
+    "submission": {
+      "query": {
+        "match": {
+          "title": "grain"
+        }
+      }
+    },
+    "rubric": {
+      "0": "Score 0 \u2014 Completely invalid: [Query Structure] The JSON is unparseable or uses entirely wrong top-level keys (e.g. 'filter' or 'order' at the root instead of 'query'/'sort'). [Field Validity] Fields used do not exist in the index mapping at all. [Operator Correctness] No recognizable Elasticsearch query operator is used correctly. [Task Alignment] The query is completely unrelated to the stated task \u2014 it would either throw a parsing error or return results that have nothing to do with what was asked.",
+      "1": "Score 1 \u2014 Major errors: [Query Structure] A recognizable query type is attempted (e.g. bool, match, term) but the structure is fundamentally broken \u2014 e.g. a nested field queried without a nested wrapper, or a plain term used where a bool is required. [Field Validity] At least one critical field name is wrong or non-existent (e.g. 'headline' instead of 'title', 'tags' instead of 'topics'). [Operator Correctness] Wrong clause type used that changes semantics significantly (e.g. match_all instead of a specific filter). [Task Alignment] The query captures the right intent but the errors are severe enough that it would return empty results or completely wrong documents.",
+      "2": "Score 2 \u2014 Partially correct: [Query Structure] The outer query structure is correct (e.g. bool with must/filter) but at least one required clause is entirely missing (e.g. no filter, no sort, no date range, missing one branch of a multi-field search). [Field Validity] All field names that ARE present are correct. [Operator Correctness] Operators used are correct where applied; errors are of omission, not commission. [Task Alignment] The query partially satisfies the task \u2014 it gets some results right but the missing component means the result set is over-broad or incomplete.",
+      "3": "Score 3 \u2014 Mostly correct with minor issues: [Query Structure] All required clauses and nesting levels are present. [Field Validity] At most one field name is slightly wrong or suboptimal (e.g. using a non-existent field name in sort, or using 'match' on a keyword field where 'term' is preferred). [Operator Correctness] Operators are logically correct but one is imprecise \u2014 e.g. match vs term on a keyword field, or a sort on a non-indexed field. [Task Alignment] The query would return broadly correct results but with minor precision or correctness issues that a small one-line fix would resolve.",
+      "4": "Score 4 \u2014 Fully correct: [Query Structure] The query uses exactly the right clause type(s), correctly nested and composed (e.g. proper bool > must + filter, nested wrapper with correct path). [Field Validity] Every field name is exactly correct and matches the index mapping. [Operator Correctness] All operators (match/term/range/sort order/nested path) are exactly right for the data type of each field. [Task Alignment] The query returns precisely the documents the task describes \u2014 no over-retrieval, no under-retrieval, and the sort/pagination is correct if specified."
+    },
+    "score": 3,
+    "rationale": "[Score 3] [Query Structure] Correct match structure. | [Field Validity] 'title' is a valid field but the task specifies 'content'. | [Operator Correctness] 'match' is correct for text fields. | [Task Alignment] Searches the wrong field \u2014 retrieves articles mentioning 'grain' in the title only, missing content-only mentions."
+  },
+  {
+    "task": "Retrieve every article linked to the country key \"ca\".",
+    "reference": {
+      "query": {
+        "term": {
+          "countryKeys": "ca"
+        }
+      }
+    },
+    "submission": {
+      "query": {
+        "term": {
+          "countries": "ca"
+        }
+      }
+    },
+    "rubric": {
+      "0": "Score 0 \u2014 Completely invalid: [Query Structure] The JSON is unparseable or uses entirely wrong top-level keys (e.g. 'filter' or 'order' at the root instead of 'query'/'sort'). [Field Validity] Fields used do not exist in the index mapping at all. [Operator Correctness] No recognizable Elasticsearch query operator is used correctly. [Task Alignment] The query is completely unrelated to the stated task \u2014 it would either throw a parsing error or return results that have nothing to do with what was asked.",
+      "1": "Score 1 \u2014 Major errors: [Query Structure] A recognizable query type is attempted (e.g. bool, match, term) but the structure is fundamentally broken \u2014 e.g. a nested field queried without a nested wrapper, or a plain term used where a bool is required. [Field Validity] At least one critical field name is wrong or non-existent (e.g. 'headline' instead of 'title', 'tags' instead of 'topics'). [Operator Correctness] Wrong clause type used that changes semantics significantly (e.g. match_all instead of a specific filter). [Task Alignment] The query captures the right intent but the errors are severe enough that it would return empty results or completely wrong documents.",
+      "2": "Score 2 \u2014 Partially correct: [Query Structure] The outer query structure is correct (e.g. bool with must/filter) but at least one required clause is entirely missing (e.g. no filter, no sort, no date range, missing one branch of a multi-field search). [Field Validity] All field names that ARE present are correct. [Operator Correctness] Operators used are correct where applied; errors are of omission, not commission. [Task Alignment] The query partially satisfies the task \u2014 it gets some results right but the missing component means the result set is over-broad or incomplete.",
+      "3": "Score 3 \u2014 Mostly correct with minor issues: [Query Structure] All required clauses and nesting levels are present. [Field Validity] At most one field name is slightly wrong or suboptimal (e.g. using a non-existent field name in sort, or using 'match' on a keyword field where 'term' is preferred). [Operator Correctness] Operators are logically correct but one is imprecise \u2014 e.g. match vs term on a keyword field, or a sort on a non-indexed field. [Task Alignment] The query would return broadly correct results but with minor precision or correctness issues that a small one-line fix would resolve.",
+      "4": "Score 4 \u2014 Fully correct: [Query Structure] The query uses exactly the right clause type(s), correctly nested and composed (e.g. proper bool > must + filter, nested wrapper with correct path). [Field Validity] Every field name is exactly correct and matches the index mapping. [Operator Correctness] All operators (match/term/range/sort order/nested path) are exactly right for the data type of each field. [Task Alignment] The query returns precisely the documents the task describes \u2014 no over-retrieval, no under-retrieval, and the sort/pagination is correct if specified."
+    },
+    "score": 1,
+    "rationale": "[Score 1] [Query Structure] Correct term query structure. | [Field Validity] 'countries' does not exist in the mapping at all \u2014 the correct field is 'countryKeys'. Fatal field name error. | [Operator Correctness] 'term' is the right operator. | [Task Alignment] Returns zero results because the field doesn't exist in the index."
+  },
+  {
+    "task": "Retrieve \"acq\" articles from oldest to newest.",
+    "reference": {
+      "query": {
+        "term": {
+          "topics": "acq"
+        }
+      },
+      "sort": [
+        {
+          "date": {
+            "order": "asc"
+          }
+        }
+      ]
+    },
+    "submission": {
+      "query": {
+        "term": {
+          "topics": "acq"
+        }
+      }
+    },
+    "rubric": {
+      "0": "Score 0 \u2014 Completely invalid: [Query Structure] The JSON is unparseable or uses entirely wrong top-level keys (e.g. 'filter' or 'order' at the root instead of 'query'/'sort'). [Field Validity] Fields used do not exist in the index mapping at all. [Operator Correctness] No recognizable Elasticsearch query operator is used correctly. [Task Alignment] The query is completely unrelated to the stated task \u2014 it would either throw a parsing error or return results that have nothing to do with what was asked.",
+      "1": "Score 1 \u2014 Major errors: [Query Structure] A recognizable query type is attempted (e.g. bool, match, term) but the structure is fundamentally broken \u2014 e.g. a nested field queried without a nested wrapper, or a plain term used where a bool is required. [Field Validity] At least one critical field name is wrong or non-existent (e.g. 'headline' instead of 'title', 'tags' instead of 'topics'). [Operator Correctness] Wrong clause type used that changes semantics significantly (e.g. match_all instead of a specific filter). [Task Alignment] The query captures the right intent but the errors are severe enough that it would return empty results or completely wrong documents.",
+      "2": "Score 2 \u2014 Partially correct: [Query Structure] The outer query structure is correct (e.g. bool with must/filter) but at least one required clause is entirely missing (e.g. no filter, no sort, no date range, missing one branch of a multi-field search). [Field Validity] All field names that ARE present are correct. [Operator Correctness] Operators used are correct where applied; errors are of omission, not commission. [Task Alignment] The query partially satisfies the task \u2014 it gets some results right but the missing component means the result set is over-broad or incomplete.",
+      "3": "Score 3 \u2014 Mostly correct with minor issues: [Query Structure] All required clauses and nesting levels are present. [Field Validity] At most one field name is slightly wrong or suboptimal (e.g. using a non-existent field name in sort, or using 'match' on a keyword field where 'term' is preferred). [Operator Correctness] Operators are logically correct but one is imprecise \u2014 e.g. match vs term on a keyword field, or a sort on a non-indexed field. [Task Alignment] The query would return broadly correct results but with minor precision or correctness issues that a small one-line fix would resolve.",
+      "4": "Score 4 \u2014 Fully correct: [Query Structure] The query uses exactly the right clause type(s), correctly nested and composed (e.g. proper bool > must + filter, nested wrapper with correct path). [Field Validity] Every field name is exactly correct and matches the index mapping. [Operator Correctness] All operators (match/term/range/sort order/nested path) are exactly right for the data type of each field. [Task Alignment] The query returns precisely the documents the task describes \u2014 no over-retrieval, no under-retrieval, and the sort/pagination is correct if specified."
+    },
+    "score": 2,
+    "rationale": "[Score 2] [Query Structure] The query clause is correct but the 'sort' clause is entirely absent. | [Field Validity] The query field is correct. | [Operator Correctness] The query operator is correct; sort operator is absent. | [Task Alignment] Returns the right documents but in arbitrary order, not the required date order. Half the task is complete."
+  },
+  {
+    "task": "Multi-field search for \"interest rate\" covering title and content.",
+    "reference": {
+      "query": {
+        "multi_match": {
+          "query": "interest rate",
+          "fields": [
+            "title",
+            "content"
+          ]
+        }
+      }
+    },
+    "submission": {
+      "query": {
+        "multi_match": {
+          "query": "interest rate",
+          "fields": [
+            "headline",
+            "body"
+          ]
+        }
+      }
+    },
+    "rubric": {
+      "0": "Score 0 \u2014 Completely invalid: [Query Structure] The JSON is unparseable or uses entirely wrong top-level keys (e.g. 'filter' or 'order' at the root instead of 'query'/'sort'). [Field Validity] Fields used do not exist in the index mapping at all. [Operator Correctness] No recognizable Elasticsearch query operator is used correctly. [Task Alignment] The query is completely unrelated to the stated task \u2014 it would either throw a parsing error or return results that have nothing to do with what was asked.",
+      "1": "Score 1 \u2014 Major errors: [Query Structure] A recognizable query type is attempted (e.g. bool, match, term) but the structure is fundamentally broken \u2014 e.g. a nested field queried without a nested wrapper, or a plain term used where a bool is required. [Field Validity] At least one critical field name is wrong or non-existent (e.g. 'headline' instead of 'title', 'tags' instead of 'topics'). [Operator Correctness] Wrong clause type used that changes semantics significantly (e.g. match_all instead of a specific filter). [Task Alignment] The query captures the right intent but the errors are severe enough that it would return empty results or completely wrong documents.",
+      "2": "Score 2 \u2014 Partially correct: [Query Structure] The outer query structure is correct (e.g. bool with must/filter) but at least one required clause is entirely missing (e.g. no filter, no sort, no date range, missing one branch of a multi-field search). [Field Validity] All field names that ARE present are correct. [Operator Correctness] Operators used are correct where applied; errors are of omission, not commission. [Task Alignment] The query partially satisfies the task \u2014 it gets some results right but the missing component means the result set is over-broad or incomplete.",
+      "3": "Score 3 \u2014 Mostly correct with minor issues: [Query Structure] All required clauses and nesting levels are present. [Field Validity] At most one field name is slightly wrong or suboptimal (e.g. using a non-existent field name in sort, or using 'match' on a keyword field where 'term' is preferred). [Operator Correctness] Operators are logically correct but one is imprecise \u2014 e.g. match vs term on a keyword field, or a sort on a non-indexed field. [Task Alignment] The query would return broadly correct results but with minor precision or correctness issues that a small one-line fix would resolve.",
+      "4": "Score 4 \u2014 Fully correct: [Query Structure] The query uses exactly the right clause type(s), correctly nested and composed (e.g. proper bool > must + filter, nested wrapper with correct path). [Field Validity] Every field name is exactly correct and matches the index mapping. [Operator Correctness] All operators (match/term/range/sort order/nested path) are exactly right for the data type of each field. [Task Alignment] The query returns precisely the documents the task describes \u2014 no over-retrieval, no under-retrieval, and the sort/pagination is correct if specified."
+    },
+    "score": 1,
+    "rationale": "[Score 1] [Query Structure] Correct multi_match structure. | [Field Validity] 'headline' and 'body' do not exist in the mapping \u2014 the correct fields are 'title' and 'content'. Both field names are wrong. | [Operator Correctness] 'multi_match' is the right operator. | [Task Alignment] Returns zero results because neither field exists in the index."
+  },
+  {
+    "task": "Find every article labelled under the topic category \"money-fx\".",
+    "reference": {
+      "query": {
+        "term": {
+          "topics": "money-fx"
+        }
+      }
+    },
+    "submission": {
+      "query": {
+        "term": {
+          "topics": "money-fx"
+        }
+      }
+    },
+    "rubric": {
+      "0": "Score 0 \u2014 Completely invalid: [Query Structure] The JSON is unparseable or uses entirely wrong top-level keys (e.g. 'filter' or 'order' at the root instead of 'query'/'sort'). [Field Validity] Fields used do not exist in the index mapping at all. [Operator Correctness] No recognizable Elasticsearch query operator is used correctly. [Task Alignment] The query is completely unrelated to the stated task \u2014 it would either throw a parsing error or return results that have nothing to do with what was asked.",
+      "1": "Score 1 \u2014 Major errors: [Query Structure] A recognizable query type is attempted (e.g. bool, match, term) but the structure is fundamentally broken \u2014 e.g. a nested field queried without a nested wrapper, or a plain term used where a bool is required. [Field Validity] At least one critical field name is wrong or non-existent (e.g. 'headline' instead of 'title', 'tags' instead of 'topics'). [Operator Correctness] Wrong clause type used that changes semantics significantly (e.g. match_all instead of a specific filter). [Task Alignment] The query captures the right intent but the errors are severe enough that it would return empty results or completely wrong documents.",
+      "2": "Score 2 \u2014 Partially correct: [Query Structure] The outer query structure is correct (e.g. bool with must/filter) but at least one required clause is entirely missing (e.g. no filter, no sort, no date range, missing one branch of a multi-field search). [Field Validity] All field names that ARE present are correct. [Operator Correctness] Operators used are correct where applied; errors are of omission, not commission. [Task Alignment] The query partially satisfies the task \u2014 it gets some results right but the missing component means the result set is over-broad or incomplete.",
+      "3": "Score 3 \u2014 Mostly correct with minor issues: [Query Structure] All required clauses and nesting levels are present. [Field Validity] At most one field name is slightly wrong or suboptimal (e.g. using a non-existent field name in sort, or using 'match' on a keyword field where 'term' is preferred). [Operator Correctness] Operators are logically correct but one is imprecise \u2014 e.g. match vs term on a keyword field, or a sort on a non-indexed field. [Task Alignment] The query would return broadly correct results but with minor precision or correctness issues that a small one-line fix would resolve.",
+      "4": "Score 4 \u2014 Fully correct: [Query Structure] The query uses exactly the right clause type(s), correctly nested and composed (e.g. proper bool > must + filter, nested wrapper with correct path). [Field Validity] Every field name is exactly correct and matches the index mapping. [Operator Correctness] All operators (match/term/range/sort order/nested path) are exactly right for the data type of each field. [Task Alignment] The query returns precisely the documents the task describes \u2014 no over-retrieval, no under-retrieval, and the sort/pagination is correct if specified."
+    },
+    "score": 4,
+    "rationale": "[Score 4] [Query Structure] Correct term query at the query level. | [Field Validity] 'topics' is a valid keyword field in the mapping. | [Operator Correctness] 'term' is the correct operator for exact-match on keyword fields. | [Task Alignment] Returns exactly documents tagged with topic 'money-fx'."
+  },
+  {
+    "task": "Show me all records tagged with the country code \"br\".",
+    "reference": {
+      "query": {
+        "term": {
+          "countryKeys": "br"
+        }
+      }
+    },
+    "submission": {
+      "query": {
+        "match_all": {}
+      }
+    },
+    "rubric": {
+      "0": "Score 0 \u2014 Completely invalid: [Query Structure] The JSON is unparseable or uses entirely wrong top-level keys (e.g. 'filter' or 'order' at the root instead of 'query'/'sort'). [Field Validity] Fields used do not exist in the index mapping at all. [Operator Correctness] No recognizable Elasticsearch query operator is used correctly. [Task Alignment] The query is completely unrelated to the stated task \u2014 it would either throw a parsing error or return results that have nothing to do with what was asked.",
+      "1": "Score 1 \u2014 Major errors: [Query Structure] A recognizable query type is attempted (e.g. bool, match, term) but the structure is fundamentally broken \u2014 e.g. a nested field queried without a nested wrapper, or a plain term used where a bool is required. [Field Validity] At least one critical field name is wrong or non-existent (e.g. 'headline' instead of 'title', 'tags' instead of 'topics'). [Operator Correctness] Wrong clause type used that changes semantics significantly (e.g. match_all instead of a specific filter). [Task Alignment] The query captures the right intent but the errors are severe enough that it would return empty results or completely wrong documents.",
+      "2": "Score 2 \u2014 Partially correct: [Query Structure] The outer query structure is correct (e.g. bool with must/filter) but at least one required clause is entirely missing (e.g. no filter, no sort, no date range, missing one branch of a multi-field search). [Field Validity] All field names that ARE present are correct. [Operator Correctness] Operators used are correct where applied; errors are of omission, not commission. [Task Alignment] The query partially satisfies the task \u2014 it gets some results right but the missing component means the result set is over-broad or incomplete.",
+      "3": "Score 3 \u2014 Mostly correct with minor issues: [Query Structure] All required clauses and nesting levels are present. [Field Validity] At most one field name is slightly wrong or suboptimal (e.g. using a non-existent field name in sort, or using 'match' on a keyword field where 'term' is preferred). [Operator Correctness] Operators are logically correct but one is imprecise \u2014 e.g. match vs term on a keyword field, or a sort on a non-indexed field. [Task Alignment] The query would return broadly correct results but with minor precision or correctness issues that a small one-line fix would resolve.",
+      "4": "Score 4 \u2014 Fully correct: [Query Structure] The query uses exactly the right clause type(s), correctly nested and composed (e.g. proper bool > must + filter, nested wrapper with correct path). [Field Validity] Every field name is exactly correct and matches the index mapping. [Operator Correctness] All operators (match/term/range/sort order/nested path) are exactly right for the data type of each field. [Task Alignment] The query returns precisely the documents the task describes \u2014 no over-retrieval, no under-retrieval, and the sort/pagination is correct if specified."
+    },
+    "score": 0,
+    "rationale": "[Score 0] [Query Structure] Syntactically valid but semantically empty \u2014 match_all returns every document. | [Field Validity] No field is targeted. | [Operator Correctness] match_all is not a filtering operator. | [Task Alignment] Returns all documents in the index with no filtering by country 'br' \u2014 completely fails the task."
+  },
+  {
+    "task": "Search for articles that discuss \"trade\" anywhere in their content.",
+    "reference": {
+      "query": {
+        "match": {
+          "content": "trade"
+        }
+      }
+    },
+    "submission": {
+      "bool": {
+        "must": [
+          {
+            "match": {
+              "title": "value"
+            }
+          }
+        ]
+      }
+    },
+    "rubric": {
+      "0": "Score 0 \u2014 Completely invalid: [Query Structure] The JSON is unparseable or uses entirely wrong top-level keys (e.g. 'filter' or 'order' at the root instead of 'query'/'sort'). [Field Validity] Fields used do not exist in the index mapping at all. [Operator Correctness] No recognizable Elasticsearch query operator is used correctly. [Task Alignment] The query is completely unrelated to the stated task \u2014 it would either throw a parsing error or return results that have nothing to do with what was asked.",
+      "1": "Score 1 \u2014 Major errors: [Query Structure] A recognizable query type is attempted (e.g. bool, match, term) but the structure is fundamentally broken \u2014 e.g. a nested field queried without a nested wrapper, or a plain term used where a bool is required. [Field Validity] At least one critical field name is wrong or non-existent (e.g. 'headline' instead of 'title', 'tags' instead of 'topics'). [Operator Correctness] Wrong clause type used that changes semantics significantly (e.g. match_all instead of a specific filter). [Task Alignment] The query captures the right intent but the errors are severe enough that it would return empty results or completely wrong documents.",
+      "2": "Score 2 \u2014 Partially correct: [Query Structure] The outer query structure is correct (e.g. bool with must/filter) but at least one required clause is entirely missing (e.g. no filter, no sort, no date range, missing one branch of a multi-field search). [Field Validity] All field names that ARE present are correct. [Operator Correctness] Operators used are correct where applied; errors are of omission, not commission. [Task Alignment] The query partially satisfies the task \u2014 it gets some results right but the missing component means the result set is over-broad or incomplete.",
+      "3": "Score 3 \u2014 Mostly correct with minor issues: [Query Structure] All required clauses and nesting levels are present. [Field Validity] At most one field name is slightly wrong or suboptimal (e.g. using a non-existent field name in sort, or using 'match' on a keyword field where 'term' is preferred). [Operator Correctness] Operators are logically correct but one is imprecise \u2014 e.g. match vs term on a keyword field, or a sort on a non-indexed field. [Task Alignment] The query would return broadly correct results but with minor precision or correctness issues that a small one-line fix would resolve.",
+      "4": "Score 4 \u2014 Fully correct: [Query Structure] The query uses exactly the right clause type(s), correctly nested and composed (e.g. proper bool > must + filter, nested wrapper with correct path). [Field Validity] Every field name is exactly correct and matches the index mapping. [Operator Correctness] All operators (match/term/range/sort order/nested path) are exactly right for the data type of each field. [Task Alignment] The query returns precisely the documents the task describes \u2014 no over-retrieval, no under-retrieval, and the sort/pagination is correct if specified."
+    },
+    "score": 0,
+    "rationale": "[Score 0] [Query Structure] Invalid top-level keys \u2014 not a valid Elasticsearch query DSL structure. | [Field Validity] Fields referenced either don't exist or are in wrong positions. | [Operator Correctness] No valid operator is correctly applied. | [Task Alignment] This query would either fail to parse or return completely unrelated results."
+  },
+  {
+    "task": "Get \"earn\" articles with the most recent ones at the top.",
+    "reference": {
+      "query": {
+        "match": {
+          "content": "earn"
+        }
+      },
+      "sort": [
+        {
+          "date": {
+            "order": "desc"
+          }
+        }
+      ]
+    },
+    "submission": {
+      "query": {
+        "match": {
+          "content": "earn"
+        }
+      },
+      "sort": [
+        {
+          "date": {
+            "order": "asc"
+          }
+        }
+      ]
+    },
+    "rubric": {
+      "0": "Score 0 \u2014 Completely invalid: [Query Structure] The JSON is unparseable or uses entirely wrong top-level keys (e.g. 'filter' or 'order' at the root instead of 'query'/'sort'). [Field Validity] Fields used do not exist in the index mapping at all. [Operator Correctness] No recognizable Elasticsearch query operator is used correctly. [Task Alignment] The query is completely unrelated to the stated task \u2014 it would either throw a parsing error or return results that have nothing to do with what was asked.",
+      "1": "Score 1 \u2014 Major errors: [Query Structure] A recognizable query type is attempted (e.g. bool, match, term) but the structure is fundamentally broken \u2014 e.g. a nested field queried without a nested wrapper, or a plain term used where a bool is required. [Field Validity] At least one critical field name is wrong or non-existent (e.g. 'headline' instead of 'title', 'tags' instead of 'topics'). [Operator Correctness] Wrong clause type used that changes semantics significantly (e.g. match_all instead of a specific filter). [Task Alignment] The query captures the right intent but the errors are severe enough that it would return empty results or completely wrong documents.",
+      "2": "Score 2 \u2014 Partially correct: [Query Structure] The outer query structure is correct (e.g. bool with must/filter) but at least one required clause is entirely missing (e.g. no filter, no sort, no date range, missing one branch of a multi-field search). [Field Validity] All field names that ARE present are correct. [Operator Correctness] Operators used are correct where applied; errors are of omission, not commission. [Task Alignment] The query partially satisfies the task \u2014 it gets some results right but the missing component means the result set is over-broad or incomplete.",
+      "3": "Score 3 \u2014 Mostly correct with minor issues: [Query Structure] All required clauses and nesting levels are present. [Field Validity] At most one field name is slightly wrong or suboptimal (e.g. using a non-existent field name in sort, or using 'match' on a keyword field where 'term' is preferred). [Operator Correctness] Operators are logically correct but one is imprecise \u2014 e.g. match vs term on a keyword field, or a sort on a non-indexed field. [Task Alignment] The query would return broadly correct results but with minor precision or correctness issues that a small one-line fix would resolve.",
+      "4": "Score 4 \u2014 Fully correct: [Query Structure] The query uses exactly the right clause type(s), correctly nested and composed (e.g. proper bool > must + filter, nested wrapper with correct path). [Field Validity] Every field name is exactly correct and matches the index mapping. [Operator Correctness] All operators (match/term/range/sort order/nested path) are exactly right for the data type of each field. [Task Alignment] The query returns precisely the documents the task describes \u2014 no over-retrieval, no under-retrieval, and the sort/pagination is correct if specified."
+    },
+    "score": 1,
+    "rationale": "[Score 1] [Query Structure] Query and sort clauses are present. | [Field Validity] All field names are correct. | [Operator Correctness] Sort order is 'asc' but the task requires 'desc' \u2014 the direction is exactly backwards. | [Task Alignment] Returns the right documents but in the opposite order, completely inverting the intended ranking."
+  },
+  {
+    "task": "Get all documents whose georeferences include an entry for country_code \"ca\".",
+    "reference": {
+      "query": {
+        "nested": {
+          "path": "georeferences",
+          "query": {
+            "term": {
+              "georeferences.country_code": "ca"
+            }
+          }
+        }
+      }
+    },
+    "submission": {
+      "query": {
+        "nested": {
+          "path": "georeferences",
+          "query": {
+            "match": {
+              "georeferences.country_code": "ca"
+            }
+          }
+        }
+      }
+    },
+    "rubric": {
+      "0": "Score 0 \u2014 Completely invalid: [Query Structure] The JSON is unparseable or uses entirely wrong top-level keys (e.g. 'filter' or 'order' at the root instead of 'query'/'sort'). [Field Validity] Fields used do not exist in the index mapping at all. [Operator Correctness] No recognizable Elasticsearch query operator is used correctly. [Task Alignment] The query is completely unrelated to the stated task \u2014 it would either throw a parsing error or return results that have nothing to do with what was asked.",
+      "1": "Score 1 \u2014 Major errors: [Query Structure] A recognizable query type is attempted (e.g. bool, match, term) but the structure is fundamentally broken \u2014 e.g. a nested field queried without a nested wrapper, or a plain term used where a bool is required. [Field Validity] At least one critical field name is wrong or non-existent (e.g. 'headline' instead of 'title', 'tags' instead of 'topics'). [Operator Correctness] Wrong clause type used that changes semantics significantly (e.g. match_all instead of a specific filter). [Task Alignment] The query captures the right intent but the errors are severe enough that it would return empty results or completely wrong documents.",
+      "2": "Score 2 \u2014 Partially correct: [Query Structure] The outer query structure is correct (e.g. bool with must/filter) but at least one required clause is entirely missing (e.g. no filter, no sort, no date range, missing one branch of a multi-field search). [Field Validity] All field names that ARE present are correct. [Operator Correctness] Operators used are correct where applied; errors are of omission, not commission. [Task Alignment] The query partially satisfies the task \u2014 it gets some results right but the missing component means the result set is over-broad or incomplete.",
+      "3": "Score 3 \u2014 Mostly correct with minor issues: [Query Structure] All required clauses and nesting levels are present. [Field Validity] At most one field name is slightly wrong or suboptimal (e.g. using a non-existent field name in sort, or using 'match' on a keyword field where 'term' is preferred). [Operator Correctness] Operators are logically correct but one is imprecise \u2014 e.g. match vs term on a keyword field, or a sort on a non-indexed field. [Task Alignment] The query would return broadly correct results but with minor precision or correctness issues that a small one-line fix would resolve.",
+      "4": "Score 4 \u2014 Fully correct: [Query Structure] The query uses exactly the right clause type(s), correctly nested and composed (e.g. proper bool > must + filter, nested wrapper with correct path). [Field Validity] Every field name is exactly correct and matches the index mapping. [Operator Correctness] All operators (match/term/range/sort order/nested path) are exactly right for the data type of each field. [Task Alignment] The query returns precisely the documents the task describes \u2014 no over-retrieval, no under-retrieval, and the sort/pagination is correct if specified."
+    },
+    "score": 3,
+    "rationale": "[Score 3] [Query Structure] Correct nested wrapper with 'path' and inner 'query'. | [Field Validity] Path and field name are both correct. | [Operator Correctness] 'match' is used on a keyword subfield where 'term' is required for exact matching. This is a minor operator precision issue. | [Task Alignment] Will mostly return correct results but 'match' may produce unexpected behavior on the keyword field 'georeferences.country_code'."
+  },
+  {
+    "task": "Find documents where either the title or the content contains \"money-fx\".",
+    "reference": {
+      "query": {
+        "multi_match": {
+          "query": "money-fx",
+          "fields": [
+            "title",
+            "content"
+          ]
+        }
+      }
+    },
+    "submission": {
+      "query": {
+        "multi_match": {
+          "query": "money-fx",
+          "fields": [
+            "title",
+            "content"
+          ]
+        }
+      }
+    },
+    "rubric": {
+      "0": "Score 0 \u2014 Completely invalid: [Query Structure] The JSON is unparseable or uses entirely wrong top-level keys (e.g. 'filter' or 'order' at the root instead of 'query'/'sort'). [Field Validity] Fields used do not exist in the index mapping at all. [Operator Correctness] No recognizable Elasticsearch query operator is used correctly. [Task Alignment] The query is completely unrelated to the stated task \u2014 it would either throw a parsing error or return results that have nothing to do with what was asked.",
+      "1": "Score 1 \u2014 Major errors: [Query Structure] A recognizable query type is attempted (e.g. bool, match, term) but the structure is fundamentally broken \u2014 e.g. a nested field queried without a nested wrapper, or a plain term used where a bool is required. [Field Validity] At least one critical field name is wrong or non-existent (e.g. 'headline' instead of 'title', 'tags' instead of 'topics'). [Operator Correctness] Wrong clause type used that changes semantics significantly (e.g. match_all instead of a specific filter). [Task Alignment] The query captures the right intent but the errors are severe enough that it would return empty results or completely wrong documents.",
+      "2": "Score 2 \u2014 Partially correct: [Query Structure] The outer query structure is correct (e.g. bool with must/filter) but at least one required clause is entirely missing (e.g. no filter, no sort, no date range, missing one branch of a multi-field search). [Field Validity] All field names that ARE present are correct. [Operator Correctness] Operators used are correct where applied; errors are of omission, not commission. [Task Alignment] The query partially satisfies the task \u2014 it gets some results right but the missing component means the result set is over-broad or incomplete.",
+      "3": "Score 3 \u2014 Mostly correct with minor issues: [Query Structure] All required clauses and nesting levels are present. [Field Validity] At most one field name is slightly wrong or suboptimal (e.g. using a non-existent field name in sort, or using 'match' on a keyword field where 'term' is preferred). [Operator Correctness] Operators are logically correct but one is imprecise \u2014 e.g. match vs term on a keyword field, or a sort on a non-indexed field. [Task Alignment] The query would return broadly correct results but with minor precision or correctness issues that a small one-line fix would resolve.",
+      "4": "Score 4 \u2014 Fully correct: [Query Structure] The query uses exactly the right clause type(s), correctly nested and composed (e.g. proper bool > must + filter, nested wrapper with correct path). [Field Validity] Every field name is exactly correct and matches the index mapping. [Operator Correctness] All operators (match/term/range/sort order/nested path) are exactly right for the data type of each field. [Task Alignment] The query returns precisely the documents the task describes \u2014 no over-retrieval, no under-retrieval, and the sort/pagination is correct if specified."
+    },
+    "score": 4,
+    "rationale": "[Score 4] [Query Structure] Correct multi_match query with 'query' and 'fields' both present. | [Field Validity] Both 'title' and 'content' are valid text fields. | [Operator Correctness] 'multi_match' is the correct operator for searching across multiple fields simultaneously. | [Task Alignment] Returns all documents where 'money-fx' appears in either title or content."
+  },
+  {
+    "task": "Find every article labelled under the topic category \"money-fx\".",
+    "reference": {
+      "query": {
+        "term": {
+          "topics": "money-fx"
+        }
+      }
+    },
+    "submission": {
+      "query": {
+        "term": {
+          "tags": "money-fx"
+        }
+      }
+    },
+    "rubric": {
+      "0": "Score 0 \u2014 Completely invalid: [Query Structure] The JSON is unparseable or uses entirely wrong top-level keys (e.g. 'filter' or 'order' at the root instead of 'query'/'sort'). [Field Validity] Fields used do not exist in the index mapping at all. [Operator Correctness] No recognizable Elasticsearch query operator is used correctly. [Task Alignment] The query is completely unrelated to the stated task \u2014 it would either throw a parsing error or return results that have nothing to do with what was asked.",
+      "1": "Score 1 \u2014 Major errors: [Query Structure] A recognizable query type is attempted (e.g. bool, match, term) but the structure is fundamentally broken \u2014 e.g. a nested field queried without a nested wrapper, or a plain term used where a bool is required. [Field Validity] At least one critical field name is wrong or non-existent (e.g. 'headline' instead of 'title', 'tags' instead of 'topics'). [Operator Correctness] Wrong clause type used that changes semantics significantly (e.g. match_all instead of a specific filter). [Task Alignment] The query captures the right intent but the errors are severe enough that it would return empty results or completely wrong documents.",
+      "2": "Score 2 \u2014 Partially correct: [Query Structure] The outer query structure is correct (e.g. bool with must/filter) but at least one required clause is entirely missing (e.g. no filter, no sort, no date range, missing one branch of a multi-field search). [Field Validity] All field names that ARE present are correct. [Operator Correctness] Operators used are correct where applied; errors are of omission, not commission. [Task Alignment] The query partially satisfies the task \u2014 it gets some results right but the missing component means the result set is over-broad or incomplete.",
+      "3": "Score 3 \u2014 Mostly correct with minor issues: [Query Structure] All required clauses and nesting levels are present. [Field Validity] At most one field name is slightly wrong or suboptimal (e.g. using a non-existent field name in sort, or using 'match' on a keyword field where 'term' is preferred). [Operator Correctness] Operators are logically correct but one is imprecise \u2014 e.g. match vs term on a keyword field, or a sort on a non-indexed field. [Task Alignment] The query would return broadly correct results but with minor precision or correctness issues that a small one-line fix would resolve.",
+      "4": "Score 4 \u2014 Fully correct: [Query Structure] The query uses exactly the right clause type(s), correctly nested and composed (e.g. proper bool > must + filter, nested wrapper with correct path). [Field Validity] Every field name is exactly correct and matches the index mapping. [Operator Correctness] All operators (match/term/range/sort order/nested path) are exactly right for the data type of each field. [Task Alignment] The query returns precisely the documents the task describes \u2014 no over-retrieval, no under-retrieval, and the sort/pagination is correct if specified."
+    },
+    "score": 1,
+    "rationale": "[Score 1] [Query Structure] Structurally valid term query. | [Field Validity] 'tags' does not exist in the index mapping \u2014 the correct field is 'topics'. This is a critical field name error. | [Operator Correctness] 'term' is the right operator type. | [Task Alignment] Returns zero results because the field doesn't exist. The intent is clear but the field name error is fatal."
+  },
+  {
+    "task": "Filter the index to documents that are published on or after 1987-03-01.",
+    "reference": {
+      "query": {
+        "range": {
+          "date": {
+            "gte": "1987-03-01"
+          }
+        }
+      }
+    },
+    "submission": {
+      "query": {
+        "range": {
+          "date": {
+            "lte": "1987-03-01"
+          }
+        }
+      }
+    },
+    "rubric": {
+      "0": "Score 0 \u2014 Completely invalid: [Query Structure] The JSON is unparseable or uses entirely wrong top-level keys (e.g. 'filter' or 'order' at the root instead of 'query'/'sort'). [Field Validity] Fields used do not exist in the index mapping at all. [Operator Correctness] No recognizable Elasticsearch query operator is used correctly. [Task Alignment] The query is completely unrelated to the stated task \u2014 it would either throw a parsing error or return results that have nothing to do with what was asked.",
+      "1": "Score 1 \u2014 Major errors: [Query Structure] A recognizable query type is attempted (e.g. bool, match, term) but the structure is fundamentally broken \u2014 e.g. a nested field queried without a nested wrapper, or a plain term used where a bool is required. [Field Validity] At least one critical field name is wrong or non-existent (e.g. 'headline' instead of 'title', 'tags' instead of 'topics'). [Operator Correctness] Wrong clause type used that changes semantics significantly (e.g. match_all instead of a specific filter). [Task Alignment] The query captures the right intent but the errors are severe enough that it would return empty results or completely wrong documents.",
+      "2": "Score 2 \u2014 Partially correct: [Query Structure] The outer query structure is correct (e.g. bool with must/filter) but at least one required clause is entirely missing (e.g. no filter, no sort, no date range, missing one branch of a multi-field search). [Field Validity] All field names that ARE present are correct. [Operator Correctness] Operators used are correct where applied; errors are of omission, not commission. [Task Alignment] The query partially satisfies the task \u2014 it gets some results right but the missing component means the result set is over-broad or incomplete.",
+      "3": "Score 3 \u2014 Mostly correct with minor issues: [Query Structure] All required clauses and nesting levels are present. [Field Validity] At most one field name is slightly wrong or suboptimal (e.g. using a non-existent field name in sort, or using 'match' on a keyword field where 'term' is preferred). [Operator Correctness] Operators are logically correct but one is imprecise \u2014 e.g. match vs term on a keyword field, or a sort on a non-indexed field. [Task Alignment] The query would return broadly correct results but with minor precision or correctness issues that a small one-line fix would resolve.",
+      "4": "Score 4 \u2014 Fully correct: [Query Structure] The query uses exactly the right clause type(s), correctly nested and composed (e.g. proper bool > must + filter, nested wrapper with correct path). [Field Validity] Every field name is exactly correct and matches the index mapping. [Operator Correctness] All operators (match/term/range/sort order/nested path) are exactly right for the data type of each field. [Task Alignment] The query returns precisely the documents the task describes \u2014 no over-retrieval, no under-retrieval, and the sort/pagination is correct if specified."
+    },
+    "score": 2,
+    "rationale": "[Score 2] [Query Structure] Correct range query structure. | [Field Validity] 'date' is the correct field. | [Operator Correctness] The comparison operator is flipped (gte\u2194lte), inverting the date window. This is a significant logic error that returns the opposite set of documents. | [Task Alignment] The field and structure are right but the result set is the complement of what was asked for."
+  },
+  {
+    "task": "Search for articles that discuss \"crude\" anywhere in their content.",
+    "reference": {
+      "query": {
+        "match": {
+          "content": "crude"
+        }
+      }
+    },
+    "submission": {
+      "query": {
+        "match": {
+          "body": "crude"
+        }
+      }
+    },
+    "rubric": {
+      "0": "Score 0 \u2014 Completely invalid: [Query Structure] The JSON is unparseable or uses entirely wrong top-level keys (e.g. 'filter' or 'order' at the root instead of 'query'/'sort'). [Field Validity] Fields used do not exist in the index mapping at all. [Operator Correctness] No recognizable Elasticsearch query operator is used correctly. [Task Alignment] The query is completely unrelated to the stated task \u2014 it would either throw a parsing error or return results that have nothing to do with what was asked.",
+      "1": "Score 1 \u2014 Major errors: [Query Structure] A recognizable query type is attempted (e.g. bool, match, term) but the structure is fundamentally broken \u2014 e.g. a nested field queried without a nested wrapper, or a plain term used where a bool is required. [Field Validity] At least one critical field name is wrong or non-existent (e.g. 'headline' instead of 'title', 'tags' instead of 'topics'). [Operator Correctness] Wrong clause type used that changes semantics significantly (e.g. match_all instead of a specific filter). [Task Alignment] The query captures the right intent but the errors are severe enough that it would return empty results or completely wrong documents.",
+      "2": "Score 2 \u2014 Partially correct: [Query Structure] The outer query structure is correct (e.g. bool with must/filter) but at least one required clause is entirely missing (e.g. no filter, no sort, no date range, missing one branch of a multi-field search). [Field Validity] All field names that ARE present are correct. [Operator Correctness] Operators used are correct where applied; errors are of omission, not commission. [Task Alignment] The query partially satisfies the task \u2014 it gets some results right but the missing component means the result set is over-broad or incomplete.",
+      "3": "Score 3 \u2014 Mostly correct with minor issues: [Query Structure] All required clauses and nesting levels are present. [Field Validity] At most one field name is slightly wrong or suboptimal (e.g. using a non-existent field name in sort, or using 'match' on a keyword field where 'term' is preferred). [Operator Correctness] Operators are logically correct but one is imprecise \u2014 e.g. match vs term on a keyword field, or a sort on a non-indexed field. [Task Alignment] The query would return broadly correct results but with minor precision or correctness issues that a small one-line fix would resolve.",
+      "4": "Score 4 \u2014 Fully correct: [Query Structure] The query uses exactly the right clause type(s), correctly nested and composed (e.g. proper bool > must + filter, nested wrapper with correct path). [Field Validity] Every field name is exactly correct and matches the index mapping. [Operator Correctness] All operators (match/term/range/sort order/nested path) are exactly right for the data type of each field. [Task Alignment] The query returns precisely the documents the task describes \u2014 no over-retrieval, no under-retrieval, and the sort/pagination is correct if specified."
+    },
+    "score": 2,
+    "rationale": "[Score 2] [Query Structure] Correct match clause structure. | [Field Validity] The field 'body' does not exist in the mapping \u2014 correct field is 'content'. This causes zero results. | [Operator Correctness] 'match' operator is appropriate for text search. | [Task Alignment] Intent is correct but the non-existent field means no documents are retrieved."
+  },
+  {
+    "task": "Get all documents discussing \"earn\" from 1987 onwards.",
+    "reference": {
+      "query": {
+        "bool": {
+          "must": [
+            {
+              "match": {
+                "content": "earn"
+              }
+            }
+          ],
+          "filter": [
+            {
+              "range": {
+                "date": {
+                  "gte": "1987-01-01"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "submission": {
+      "query": {
+        "bool": {
+          "must": [
+            {
+              "match": {
+                "content": "earn"
+              }
+            }
+          ],
+          "filter": [
+            {
+              "range": {
+                "date": {
+                  "gte": "1987-01-01"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "rubric": {
+      "0": "Score 0 \u2014 Completely invalid: [Query Structure] The JSON is unparseable or uses entirely wrong top-level keys (e.g. 'filter' or 'order' at the root instead of 'query'/'sort'). [Field Validity] Fields used do not exist in the index mapping at all. [Operator Correctness] No recognizable Elasticsearch query operator is used correctly. [Task Alignment] The query is completely unrelated to the stated task \u2014 it would either throw a parsing error or return results that have nothing to do with what was asked.",
+      "1": "Score 1 \u2014 Major errors: [Query Structure] A recognizable query type is attempted (e.g. bool, match, term) but the structure is fundamentally broken \u2014 e.g. a nested field queried without a nested wrapper, or a plain term used where a bool is required. [Field Validity] At least one critical field name is wrong or non-existent (e.g. 'headline' instead of 'title', 'tags' instead of 'topics'). [Operator Correctness] Wrong clause type used that changes semantics significantly (e.g. match_all instead of a specific filter). [Task Alignment] The query captures the right intent but the errors are severe enough that it would return empty results or completely wrong documents.",
+      "2": "Score 2 \u2014 Partially correct: [Query Structure] The outer query structure is correct (e.g. bool with must/filter) but at least one required clause is entirely missing (e.g. no filter, no sort, no date range, missing one branch of a multi-field search). [Field Validity] All field names that ARE present are correct. [Operator Correctness] Operators used are correct where applied; errors are of omission, not commission. [Task Alignment] The query partially satisfies the task \u2014 it gets some results right but the missing component means the result set is over-broad or incomplete.",
+      "3": "Score 3 \u2014 Mostly correct with minor issues: [Query Structure] All required clauses and nesting levels are present. [Field Validity] At most one field name is slightly wrong or suboptimal (e.g. using a non-existent field name in sort, or using 'match' on a keyword field where 'term' is preferred). [Operator Correctness] Operators are logically correct but one is imprecise \u2014 e.g. match vs term on a keyword field, or a sort on a non-indexed field. [Task Alignment] The query would return broadly correct results but with minor precision or correctness issues that a small one-line fix would resolve.",
+      "4": "Score 4 \u2014 Fully correct: [Query Structure] The query uses exactly the right clause type(s), correctly nested and composed (e.g. proper bool > must + filter, nested wrapper with correct path). [Field Validity] Every field name is exactly correct and matches the index mapping. [Operator Correctness] All operators (match/term/range/sort order/nested path) are exactly right for the data type of each field. [Task Alignment] The query returns precisely the documents the task describes \u2014 no over-retrieval, no under-retrieval, and the sort/pagination is correct if specified."
+    },
+    "score": 4,
+    "rationale": "[Score 4] [Query Structure] Correct bool query with both 'must' and 'filter' clauses properly composed. | [Field Validity] All field names match the index mapping exactly. | [Operator Correctness] match/term/range operators are all appropriate for their respective field types. | [Task Alignment] Returns exactly the documents satisfying both the relevance and the constraint conditions."
+  },
+  {
+    "task": "Retrieve articles associated with country code \"us\" that discuss \"grain\".",
+    "reference": {
+      "query": {
+        "bool": {
+          "must": [
+            {
+              "match": {
+                "content": "grain"
+              }
+            }
+          ],
+          "filter": [
+            {
+              "term": {
+                "countryKeys": "us"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "submission": {
+      "query": {
+        "bool": {
+          "must": [
+            {
+              "match": {
+                "content": "grain"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "rubric": {
+      "0": "Score 0 \u2014 Completely invalid: [Query Structure] The JSON is unparseable or uses entirely wrong top-level keys (e.g. 'filter' or 'order' at the root instead of 'query'/'sort'). [Field Validity] Fields used do not exist in the index mapping at all. [Operator Correctness] No recognizable Elasticsearch query operator is used correctly. [Task Alignment] The query is completely unrelated to the stated task \u2014 it would either throw a parsing error or return results that have nothing to do with what was asked.",
+      "1": "Score 1 \u2014 Major errors: [Query Structure] A recognizable query type is attempted (e.g. bool, match, term) but the structure is fundamentally broken \u2014 e.g. a nested field queried without a nested wrapper, or a plain term used where a bool is required. [Field Validity] At least one critical field name is wrong or non-existent (e.g. 'headline' instead of 'title', 'tags' instead of 'topics'). [Operator Correctness] Wrong clause type used that changes semantics significantly (e.g. match_all instead of a specific filter). [Task Alignment] The query captures the right intent but the errors are severe enough that it would return empty results or completely wrong documents.",
+      "2": "Score 2 \u2014 Partially correct: [Query Structure] The outer query structure is correct (e.g. bool with must/filter) but at least one required clause is entirely missing (e.g. no filter, no sort, no date range, missing one branch of a multi-field search). [Field Validity] All field names that ARE present are correct. [Operator Correctness] Operators used are correct where applied; errors are of omission, not commission. [Task Alignment] The query partially satisfies the task \u2014 it gets some results right but the missing component means the result set is over-broad or incomplete.",
+      "3": "Score 3 \u2014 Mostly correct with minor issues: [Query Structure] All required clauses and nesting levels are present. [Field Validity] At most one field name is slightly wrong or suboptimal (e.g. using a non-existent field name in sort, or using 'match' on a keyword field where 'term' is preferred). [Operator Correctness] Operators are logically correct but one is imprecise \u2014 e.g. match vs term on a keyword field, or a sort on a non-indexed field. [Task Alignment] The query would return broadly correct results but with minor precision or correctness issues that a small one-line fix would resolve.",
+      "4": "Score 4 \u2014 Fully correct: [Query Structure] The query uses exactly the right clause type(s), correctly nested and composed (e.g. proper bool > must + filter, nested wrapper with correct path). [Field Validity] Every field name is exactly correct and matches the index mapping. [Operator Correctness] All operators (match/term/range/sort order/nested path) are exactly right for the data type of each field. [Task Alignment] The query returns precisely the documents the task describes \u2014 no over-retrieval, no under-retrieval, and the sort/pagination is correct if specified."
+    },
+    "score": 2,
+    "rationale": "[Score 2] [Query Structure] The bool query is valid but only has a 'must' clause \u2014 the 'filter' clause is entirely absent. | [Field Validity] The must clause field is correct. | [Operator Correctness] The must operator is correct; the filter operator doesn't exist to evaluate. | [Task Alignment] The query only satisfies the content-matching part of the task. The date/topic/country constraint is completely missing, returning too many documents."
+  },
+  {
+    "task": "Pull all documents whose content includes the keyword \"money-fx\".",
+    "reference": {
+      "query": {
+        "match": {
+          "content": "money-fx"
+        }
+      }
+    },
+    "submission": {
+      "query": {
+        "match": {
+          "body": "money-fx"
+        }
+      }
+    },
+    "rubric": {
+      "0": "Score 0 \u2014 Completely invalid: [Query Structure] The JSON is unparseable or uses entirely wrong top-level keys (e.g. 'filter' or 'order' at the root instead of 'query'/'sort'). [Field Validity] Fields used do not exist in the index mapping at all. [Operator Correctness] No recognizable Elasticsearch query operator is used correctly. [Task Alignment] The query is completely unrelated to the stated task \u2014 it would either throw a parsing error or return results that have nothing to do with what was asked.",
+      "1": "Score 1 \u2014 Major errors: [Query Structure] A recognizable query type is attempted (e.g. bool, match, term) but the structure is fundamentally broken \u2014 e.g. a nested field queried without a nested wrapper, or a plain term used where a bool is required. [Field Validity] At least one critical field name is wrong or non-existent (e.g. 'headline' instead of 'title', 'tags' instead of 'topics'). [Operator Correctness] Wrong clause type used that changes semantics significantly (e.g. match_all instead of a specific filter). [Task Alignment] The query captures the right intent but the errors are severe enough that it would return empty results or completely wrong documents.",
+      "2": "Score 2 \u2014 Partially correct: [Query Structure] The outer query structure is correct (e.g. bool with must/filter) but at least one required clause is entirely missing (e.g. no filter, no sort, no date range, missing one branch of a multi-field search). [Field Validity] All field names that ARE present are correct. [Operator Correctness] Operators used are correct where applied; errors are of omission, not commission. [Task Alignment] The query partially satisfies the task \u2014 it gets some results right but the missing component means the result set is over-broad or incomplete.",
+      "3": "Score 3 \u2014 Mostly correct with minor issues: [Query Structure] All required clauses and nesting levels are present. [Field Validity] At most one field name is slightly wrong or suboptimal (e.g. using a non-existent field name in sort, or using 'match' on a keyword field where 'term' is preferred). [Operator Correctness] Operators are logically correct but one is imprecise \u2014 e.g. match vs term on a keyword field, or a sort on a non-indexed field. [Task Alignment] The query would return broadly correct results but with minor precision or correctness issues that a small one-line fix would resolve.",
+      "4": "Score 4 \u2014 Fully correct: [Query Structure] The query uses exactly the right clause type(s), correctly nested and composed (e.g. proper bool > must + filter, nested wrapper with correct path). [Field Validity] Every field name is exactly correct and matches the index mapping. [Operator Correctness] All operators (match/term/range/sort order/nested path) are exactly right for the data type of each field. [Task Alignment] The query returns precisely the documents the task describes \u2014 no over-retrieval, no under-retrieval, and the sort/pagination is correct if specified."
+    },
+    "score": 2,
+    "rationale": "[Score 2] [Query Structure] Correct match clause structure. | [Field Validity] The field 'body' does not exist in the mapping \u2014 correct field is 'content'. This causes zero results. | [Operator Correctness] 'match' operator is appropriate for text search. | [Task Alignment] Intent is correct but the non-existent field means no documents are retrieved."
+  },
+  {
+    "task": "Which Reuters articles have \"crude\" mentioned in the content?",
+    "reference": {
+      "query": {
+        "match": {
+          "content": "crude"
+        }
+      }
+    },
+    "submission": {
+      "query": {
+        "match": {
+          "title": "crude"
+        }
+      }
+    },
+    "rubric": {
+      "0": "Score 0 \u2014 Completely invalid: [Query Structure] The JSON is unparseable or uses entirely wrong top-level keys (e.g. 'filter' or 'order' at the root instead of 'query'/'sort'). [Field Validity] Fields used do not exist in the index mapping at all. [Operator Correctness] No recognizable Elasticsearch query operator is used correctly. [Task Alignment] The query is completely unrelated to the stated task \u2014 it would either throw a parsing error or return results that have nothing to do with what was asked.",
+      "1": "Score 1 \u2014 Major errors: [Query Structure] A recognizable query type is attempted (e.g. bool, match, term) but the structure is fundamentally broken \u2014 e.g. a nested field queried without a nested wrapper, or a plain term used where a bool is required. [Field Validity] At least one critical field name is wrong or non-existent (e.g. 'headline' instead of 'title', 'tags' instead of 'topics'). [Operator Correctness] Wrong clause type used that changes semantics significantly (e.g. match_all instead of a specific filter). [Task Alignment] The query captures the right intent but the errors are severe enough that it would return empty results or completely wrong documents.",
+      "2": "Score 2 \u2014 Partially correct: [Query Structure] The outer query structure is correct (e.g. bool with must/filter) but at least one required clause is entirely missing (e.g. no filter, no sort, no date range, missing one branch of a multi-field search). [Field Validity] All field names that ARE present are correct. [Operator Correctness] Operators used are correct where applied; errors are of omission, not commission. [Task Alignment] The query partially satisfies the task \u2014 it gets some results right but the missing component means the result set is over-broad or incomplete.",
+      "3": "Score 3 \u2014 Mostly correct with minor issues: [Query Structure] All required clauses and nesting levels are present. [Field Validity] At most one field name is slightly wrong or suboptimal (e.g. using a non-existent field name in sort, or using 'match' on a keyword field where 'term' is preferred). [Operator Correctness] Operators are logically correct but one is imprecise \u2014 e.g. match vs term on a keyword field, or a sort on a non-indexed field. [Task Alignment] The query would return broadly correct results but with minor precision or correctness issues that a small one-line fix would resolve.",
+      "4": "Score 4 \u2014 Fully correct: [Query Structure] The query uses exactly the right clause type(s), correctly nested and composed (e.g. proper bool > must + filter, nested wrapper with correct path). [Field Validity] Every field name is exactly correct and matches the index mapping. [Operator Correctness] All operators (match/term/range/sort order/nested path) are exactly right for the data type of each field. [Task Alignment] The query returns precisely the documents the task describes \u2014 no over-retrieval, no under-retrieval, and the sort/pagination is correct if specified."
+    },
+    "score": 3,
+    "rationale": "[Score 3] [Query Structure] Correct match structure. | [Field Validity] 'title' is a valid field but the task specifies 'content'. | [Operator Correctness] 'match' is correct for text fields. | [Task Alignment] Searches the wrong field \u2014 retrieves articles mentioning 'crude' in the title only, missing content-only mentions."
+  }
+]

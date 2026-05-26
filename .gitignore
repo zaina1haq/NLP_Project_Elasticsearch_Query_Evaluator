@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+
+venv/
+nlp_env/
+
+outputs/
+unsloth_compiled_cache/
+
+*.bin
+*.pt
+*.pth
+*.safetensors
+
+.cache/

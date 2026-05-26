@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ES Query Evaluator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f1117;
+      --bg2:       #1a1d27;
+      --bg3:       #22263a;
+      --border:    #2e3347;
+      --text:      #e2e8f0;
+      --text2:     #94a3b8;
+      --text3:     #64748b;
+      --accent:    #6366f1;
+      --accent2:   #818cf8;
+      --green:     #22c55e;
+      --yellow:    #eab308;
+      --orange:    #f97316;
+      --red:       #ef4444;
+      --teal:      #14b8a6;
+      --s0: #ef4444; --s1: #f97316; --s2: #eab308; --s3: #22c55e; --s4: #14b8a6;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── NAV ── */
+    nav {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      height: 52px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-brand {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--accent2);
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-brand span { color: var(--text2); font-weight: 400; font-size: 13px; }
+    .nav-links { display: flex; gap: 4px; margin-left: auto; }
+    .nav-link {
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text2);
+      cursor: pointer;
+      transition: all 0.15s;
+      border: none;
+      background: none;
+    }
+    .nav-link:hover { background: var(--bg3); color: var(--text); }
+    .nav-link.active { background: var(--accent); color: #fff; }
+
+    /* ── PAGES ── */
+    .page { display: none; padding: 2rem; max-width: 1000px; margin: 0 auto; }
+    .page.active { display: block; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .section-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text3);
+      margin-bottom: 10px;
+    }
+
+    /* ── EVALUATOR PAGE ── */
+    .page-header { margin-bottom: 1.5rem; }
+    .page-header h1 { font-size: 22px; font-weight: 700; color: var(--text); }
+    .page-header p  { font-size: 13px; color: var(--text2); margin-top: 4px; }
+
+    select {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg3);
+      color: var(--text);
+      font-size: 14px;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 36px;
+    }
+    select:focus { outline: none; border-color: var(--accent); }
+    select option { background: var(--bg3); }
+
+    .task-description {
+      margin-top: 10px;
+      font-size: 14px;
+      color: var(--text2);
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      line-height: 1.6;
+    }
+
+    .editor-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .editor-col-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 6px;
+    }
+    .label-yours   { color: var(--accent2); }
+    .label-correct { color: var(--teal); }
+
+    textarea {
+      width: 100%;
+      height: 220px;
+      padding: 12px;
+      font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+      font-size: 13px;
+      line-height: 1.7;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg3);
+      color: var(--text);
+      resize: vertical;
+      transition: border-color 0.15s;
+    }
+    textarea:focus { outline: none; border-color: var(--accent); }
+    textarea.readonly-answer {
+      background: #0f2a25;
+      border-color: #1a4a3a;
+      color: #6ee7b7;
+      cursor: default;
+    }
+    textarea::placeholder { color: var(--text3); }
+
+    .btn-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .btn-eval {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-eval:hover:not(:disabled) { background: var(--accent2); }
+    .btn-eval:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    .btn-eval.loading .spinner { display: block; }
+    .status-text { font-size: 13px; color: var(--text3); }
+
+
+
+    /* Results */
+    .results-header {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+    .badge-idle    { background: var(--bg3); color: var(--text3); }
+    .badge-loading { background: #2d2a1a; color: #fbbf24; }
+    .badge-done    { background: #0f2a1f; color: var(--green); }
+    .badge-error   { background: #2a0f0f; color: var(--red); }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: 130px 1fr;
+      gap: 1rem;
+    }
+    .score-box {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 6px;
+    }
+    .score-label-sm { font-size: 10px; color: var(--text3); font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; }
+    .score-number {
+      font-size: 60px;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--border);
+      transition: color 0.3s;
+    }
+    .score-number.s0 { color: var(--s0); }
+    .score-number.s1 { color: var(--s1); }
+    .score-number.s2 { color: var(--s2); }
+    .score-number.s3 { color: var(--s3); }
+    .score-number.s4 { color: var(--s4); }
+    .score-out { font-size: 12px; color: var(--text3); }
+    .stars { display: flex; gap: 4px; margin-top: 4px; }
+    .star { width: 16px; height: 5px; border-radius: 3px; background: var(--bg); transition: background 0.3s; }
+    .star.on { background: var(--accent); }
+
+    .rationale-box {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+    }
+    .rationale-title {
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.07em;
+      color: var(--text3); margin-bottom: 10px;
+    }
+    .criteria-list { display: flex; flex-direction: column; gap: 8px; }
+    .criterion {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 12px;
+    }
+    .criterion-name {
+      font-size: 10px; font-weight: 700;
+      color: var(--accent2);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      margin-bottom: 3px;
+    }
+    .criterion-text { font-size: 13px; color: var(--text2); line-height: 1.55; }
+    .placeholder-text { font-size: 13px; color: var(--text3); font-style: italic; line-height: 1.6; }
+
+    /* ── ABOUT PAGE ── */
+    .about-hero {
+      background: linear-gradient(135deg, #1a1d35 0%, #1a2535 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+    }
+    .about-hero h2 { font-size: 24px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    .about-hero p  { font-size: 14px; color: var(--text2); line-height: 1.7; max-width: 680px; }
+    .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    .tag {
+      font-size: 12px; font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--accent2);
+      font-family: "SF Mono", monospace;
+    }
+
+    .pipeline-steps { display: flex; flex-direction: column; gap: 0; }
+    .pipeline-step {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .pipeline-step:last-child { border-bottom: none; }
+    .step-num {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .step-content h4 { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .step-content p  { font-size: 13px; color: var(--text2); line-height: 1.6; }
+    .step-content code {
+      font-family: "SF Mono", monospace;
+      font-size: 12px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      color: var(--accent2);
+    }
+
+    .score-scale { display: flex; flex-direction: column; gap: 10px; }
+    .score-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 12px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .score-badge {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: #fff;
+    }
+    .score-row-content strong { font-size: 14px; font-weight: 600; color: var(--text); }
+    .score-row-content p { font-size: 13px; color: var(--text2); margin-top: 2px; line-height: 1.5; }
+
+    .rubric-dims { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .rubric-dim {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .dim-badge {
+      width: 30px; height: 30px;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .dim-content h5 { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+    .dim-content p  { font-size: 12px; color: var(--text2); line-height: 1.5; }
+
+    /* ── BEFORE/AFTER PAGE ── */
+    .metrics-hero {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .metric-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+    .metric-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 8px; }
+    .metric-value { font-size: 36px; font-weight: 700; color: var(--text); line-height: 1; }
+    .metric-delta { font-size: 13px; color: var(--green); margin-top: 6px; font-weight: 600; }
+
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .compare-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+    .compare-card h3 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); margin-bottom: 12px; }
+    .compare-nums { display: flex; gap: 1.5rem; margin-bottom: 14px; }
+    .compare-num-item { }
+    .compare-num-label { font-size: 10px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .compare-num-val { font-size: 22px; font-weight: 700; color: var(--text); }
+    .compare-num-val.green { color: var(--green); }
+
+    .dist-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); margin-bottom: 8px; }
+    .dist-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .dist-score-label { font-size: 12px; color: var(--text2); width: 52px; flex-shrink: 0; }
+    .dist-bar-wrap { flex: 1; background: var(--bg3); border-radius: 4px; height: 8px; overflow: hidden; }
+    .dist-bar { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+    .dist-count { font-size: 11px; color: var(--text3); width: 36px; text-align: right; flex-shrink: 0; }
+
+    .per-score-list { display: flex; flex-direction: column; gap: 8px; }
+    .per-score-row { }
+    .per-score-header { display: flex; justify-content: space-between; margin-bottom: 4px; }
+    .per-score-name { font-size: 12px; color: var(--text2); font-weight: 500; }
+    .per-score-pct  { font-size: 12px; color: var(--text2); font-weight: 600; }
+    .per-score-bar-wrap { background: var(--bg3); border-radius: 4px; height: 6px; overflow: hidden; }
+    .per-score-bar { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+
+    .note-box {
+      background: #1a2035;
+      border: 1px solid #2a3a5a;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.6;
+      margin-top: 10px;
+    }
+    .note-box strong { color: var(--accent2); }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Table ── */
+    .config-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .config-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+    .config-table td:first-child { color: var(--text3); font-weight: 500; width: 200px; }
+    .config-table td:last-child { color: var(--text); font-family: "SF Mono", monospace; font-size: 12px; }
+    .config-table tr:last-child td { border-bottom: none; }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">⚡ ES Evaluator <span>Mistral-7B · LoRA</span></div>
+  <div class="nav-links">
+    <button class="nav-link active" onclick="showPage('evaluator')">Evaluator</button>
+    <button class="nav-link" onclick="showPage('metrics')">Before / After</button>
+    <button class="nav-link" onclick="showPage('about')">About</button>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- PAGE: EVALUATOR                                        -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="page active" id="page-evaluator">
+  <div class="page-header">
+    <h1>Elasticsearch Query Evaluator</h1>
+    <p>Write an ES query for the selected task and get instant AI feedback</p>
+  </div>
+
+  <div class="card">
+    <div class="section-label">Select Task</div>
+    <select id="taskSelect" onchange="updateTask()"></select>
+    <div class="task-description" id="taskText">Loading tasks...</div>
+  </div>
+
+  <div class="card">
+    <div class="editor-row">
+      <div>
+        <div class="editor-col-label label-yours">Your Query</div>
+        <textarea id="query" spellcheck="false">{
+  "query": {
+    "match": {
+      "content": "grain"
+    }
+  }
+}</textarea>
+      </div>
+      <div>
+        <div class="editor-col-label label-correct">Correct Answer</div>
+        <textarea id="referenceQuery" class="readonly-answer" readonly
+                  placeholder="Will appear after evaluation…"></textarea>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-eval" id="evalBtn" onclick="evaluateQuery()">
+        <div class="spinner"></div>
+        Evaluate
+      </button>
+      <span class="status-text" id="statusText"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="results-header">
+      <div class="section-label" style="margin:0">Results</div>
+      <span class="badge badge-idle" id="badge">Waiting</span>
+    </div>
+    <div class="results-grid">
+      <div class="score-box">
+        <div class="score-label-sm">Score</div>
+        <div class="score-number" id="scoreNumber">—</div>
+        <div class="score-out">out of 4</div>
+        <div class="stars">
+          <div class="star"></div><div class="star"></div>
+          <div class="star"></div><div class="star"></div>
+        </div>
+      </div>
+      <div class="rationale-box">
+        <div class="rationale-title">Rationale</div>
+        <div id="rationaleContent">
+          <p class="placeholder-text">Submit a query to see detailed feedback broken down by evaluation criteria.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- PAGE: ABOUT                                            -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="page" id="page-about">
+
+  <div class="about-hero">
+    <h2>Elasticsearch Query Evaluator</h2>
+    <p>An automatic rubric-based scoring system for Elasticsearch DSL queries. A fine-tuned Mistral-7B-Instruct model assigns scores 0–4 and generates structured rationales citing four independent criteria.</p>
+    <div class="tags">
+      <span class="tag">Mistral-7B-Instruct-v0.2</span>
+      <span class="tag">LoRA · rank 16</span>
+      <span class="tag">Reuters corpus</span>
+      <span class="tag">QWK 0.957</span>
+      <span class="tag">Unsloth</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-label">Project Pipeline</div>
+    <div class="pipeline-steps">
+      <div class="pipeline-step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h4>Dataset Generation</h4>
+          <p>Synthetic entries built from the Reuters corpus. Covers 8 query categories: <code>content match</code>, <code>topic term</code>, <code>date range</code>, <code>bool</code>, <code>sort</code>, <code>nested</code>, <code>country filter</code>, <code>multi-match</code>. All score levels 0–4 represented with balanced coverage.</p>
+        </div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h4>Prompt Formatting</h4>
+          <p>Entries formatted into Mistral <code>[INST]…[/INST]</code> instruction-tuning prompts. Each prompt includes the task, reference query, submission, and rubric. Expected output is a JSON object with score and rationale.</p>
+        </div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h4>Baseline Evaluation</h4>
+          <p>Base Mistral-7B evaluated on the 31-example test set: accuracy 54.8%, QWK 0.690. Over-predicts score 4 and under-predicts score 1 — a known bias of instruction-tuned models toward generous scoring.</p>
+        </div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <h4>LoRA Fine-Tuning</h4>
+          <p>Unsloth + LoRA (rank 16, alpha 128) trained up to 10 epochs with early stopping (patience=3). All 7 attention and feed-forward projection layers targeted. ~40M trainable parameters (0.54% of total).</p>
+        </div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <h4>Post Fine-Tuning Evaluation</h4>
+          <p>Fine-tuned model achieves 80.6% accuracy and QWK 0.957 on the held-out test set. Zero parse failures. Main remaining weakness: score 1 confusion (20% accuracy) — model sometimes assigns 0 or 2 instead of 1.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-label">Score Scale</div>
+    <div class="score-scale">
+      <div class="score-row">
+        <div class="score-badge" style="background:var(--s0)">0</div>
+        <div class="score-row-content">
+          <strong>Completely invalid</strong>
+          <p>Wrong top-level keys, non-existent fields, no valid operator.</p>
+        </div>
+      </div>
+      <div class="score-row">
+        <div class="score-badge" style="background:var(--s1)">1</div>
+        <div class="score-row-content">
+          <strong>Major errors</strong>
+          <p>Recognizable query type but fundamentally broken (missing nested wrapper, critical wrong field).</p>
+        </div>
+      </div>
+      <div class="score-row">
+        <div class="score-badge" style="background:var(--s2)">2</div>
+        <div class="score-row-content">
+          <strong>Partially correct</strong>
+          <p>Correct outer structure but a required clause is missing (no filter, no sort, wrong path).</p>
+        </div>
+      </div>
+      <div class="score-row">
+        <div class="score-badge" style="background:var(--s3)">3</div>
+        <div class="score-row-content">
+          <strong>Mostly correct</strong>
+          <p>All clauses present, one minor issue (wrong field, imprecise operator, wrong sort direction).</p>
+        </div>
+      </div>
+      <div class="score-row">
+        <div class="score-badge" style="background:var(--s4)">4</div>
+        <div class="score-row-content">
+          <strong>Fully correct</strong>
+          <p>Exactly right clause types, valid fields, correct operators, returns precisely the right documents.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-label">Rubric Dimensions</div>
+    <div class="rubric-dims">
+      <div class="rubric-dim">
+        <div class="dim-badge">QS</div>
+        <div class="dim-content">
+          <h5>[Query Structure]</h5>
+          <p>Is the DSL skeleton valid? Checks top-level keys, bool/must/filter nesting, and required wrappers (e.g. nested, bool).</p>
+        </div>
+      </div>
+      <div class="rubric-dim">
+        <div class="dim-badge">FV</div>
+        <div class="dim-content">
+          <h5>[Field Validity]</h5>
+          <p>Do all field names exist in the Reuters mapping? Common errors: "headline" vs "title", "body" vs "content", "tags" vs "topics".</p>
+        </div>
+      </div>
+      <div class="rubric-dim">
+        <div class="dim-badge">OC</div>
+        <div class="dim-content">
+          <h5>[Operator Correctness]</h5>
+          <p>Are match/term/range/nested used for the correct field types? "term" on analyzed text fields returns near-zero results.</p>
+        </div>
+      </div>
+      <div class="rubric-dim">
+        <div class="dim-badge">TA</div>
+        <div class="dim-content">
+          <h5>[Task Alignment]</h5>
+          <p>Does the query retrieve what the task describes? A valid query can still fail by querying the wrong field or sorting the wrong direction.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- PAGE: BEFORE / AFTER                                   -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="page" id="page-metrics">
+
+  <div class="page-header">
+    <h1>Before / After Fine-Tuning</h1>
+    <p>Results on the held-out test set (31 examples). Base model vs. LoRA fine-tuned Mistral-7B-Instruct-v0.2.</p>
+  </div>
+
+  <!-- Top metrics -->
+  <div class="metrics-hero">
+    <div class="metric-card">
+      <div class="metric-label">Accuracy</div>
+      <div class="metric-value">80.6%</div>
+      <div class="metric-delta">▲ +25.8 pp vs base</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">MAE</div>
+      <div class="metric-value">0.194</div>
+      <div class="metric-delta">▲ −0.548 vs base</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">QWK</div>
+      <div class="metric-value">0.957</div>
+      <div class="metric-delta">▲ +0.267 vs base</div>
+    </div>
+  </div>
+
+  <!-- Base vs Fine-tuned -->
+  <div class="compare-grid">
+    <!-- Base -->
+    <div class="compare-card">
+      <h3>Base Model (Pre Fine-Tuning)</h3>
+      <div class="compare-nums">
+        <div class="compare-num-item">
+          <div class="compare-num-label">Accuracy</div>
+          <div class="compare-num-val">54.8%</div>
+        </div>
+        <div class="compare-num-item">
+          <div class="compare-num-label">MAE</div>
+          <div class="compare-num-val">0.742</div>
+        </div>
+        <div class="compare-num-item">
+          <div class="compare-num-label">QWK</div>
+          <div class="compare-num-val">0.690</div>
+        </div>
+      </div>
+      <div class="dist-label">Predicted Distribution</div>
+      <div class="dist-row"><span class="dist-score-label">score 0</span><div class="dist-bar-wrap"><div class="dist-bar" style="width:75%;background:var(--s0)"></div></div><span class="dist-count">6/8</span></div>
+      <div class="dist-row"><span class="dist-score-label">score 1</span><div class="dist-bar-wrap"><div class="dist-bar" style="width:60%;background:var(--s1)"></div></div><span class="dist-count">3/5</span></div>
+      <div class="dist-row"><span class="dist-score-label">score 2</span><div class="dist-bar-wrap"><div class="dist-bar" style="width:100%;background:var(--s2)"></div></div><span class="dist-count">8/7</span></div>
+      <div class="dist-row"><span class="dist-score-label">score 3</span><div class="dist-bar-wrap"><div class="dist-bar" style="width:75%;background:var(--s3)"></div></div><span class="dist-count">3/4</span></div>
+      <div class="dist-row"><span class="dist-score-label">score 4</span><div class="dist-bar-wrap"><div class="dist-bar" style="width:100%;background:var(--s4)"></div></div><span class="dist-count">11/7</span></div>
+      <div class="note-box"><strong>Note:</strong> Base model over-predicts score 4 (11 vs 7 ground truth) and under-predicts score 1 (3 vs 5).</div>
+    </div>
+
+    <!-- Fine-tuned -->
+    <div class="compare-card">
+      <h3>Fine-Tuned Model (Post Fine-Tuning)</h3>
+      <div class="compare-nums">
+        <div class="compare-num-item">
+          <div class="compare-num-label">Accuracy</div>
+          <div class="compare-num-val green">80.6%</div>
+        </div>
+        <div class="compare-num-item">
+          <div class="compare-num-label">MAE</div>
+          <div class="compare-num-val green">0.194</div>
+        </div>
+        <div class="compare-num-item">
+          <div class="compare-num-label">QWK</div>
+          <div class="compare-num-val green">0.957</div>
+        </div>
+      </div>
+      <div class="dist-label">Predicted Distribution</div>
+      <div class="dist-row"><span class="dist-score-label">score 0</span><div class="dist-bar-wrap"><div class="dist-bar" style="width:100%;background:var(--s0)"></div></div><span class="dist-count">9/8</span></div>
+      <div class="dist-row"><span class="dist-score-label">score 1</span><div class="dist-bar-wrap"><div class="dist-bar" style="width:20%;background:var(--s1)"></div></div><span class="dist-count">1/5</span></div>
+      <div class="dist-row"><span class="dist-score-label">score 2</span><div class="dist-bar-wrap"><div class="dist-bar" style="width:100%;background:var(--s2)"></div></div><span class="dist-count">10/7</span></div>
+      <div class="dist-row"><span class="dist-score-label">score 3</span><div class="dist-bar-wrap"><div class="dist-bar" style="width:100%;background:var(--s3)"></div></div><span class="dist-count">4/4</span></div>
+      <div class="dist-row"><span class="dist-score-label">score 4</span><div class="dist-bar-wrap"><div class="dist-bar" style="width:100%;background:var(--s4)"></div></div><span class="dist-count">7/7</span></div>
+      <div class="note-box"><strong>Weakness:</strong> Score 1 accuracy is only 20% (1/5) — the model sometimes confuses score 1 with score 0 or 2.</div>
+    </div>
+  </div>
+
+  <!-- Per-score accuracy -->
+  <div class="card">
+    <div class="section-title">Per-score accuracy — fine-tuned model</div>
+    <div class="per-score-list">
+      <div class="per-score-row">
+        <div class="per-score-header"><span class="per-score-name">score 0</span><span class="per-score-pct">8/8 (100%)</span></div>
+        <div class="per-score-bar-wrap"><div class="per-score-bar" style="width:100%;background:var(--s0)"></div></div>
+      </div>
+      <div class="per-score-row">
+        <div class="per-score-header"><span class="per-score-name">score 1</span><span class="per-score-pct">1/5 (20%)</span></div>
+        <div class="per-score-bar-wrap"><div class="per-score-bar" style="width:20%;background:var(--s1)"></div></div>
+      </div>
+      <div class="per-score-row">
+        <div class="per-score-header"><span class="per-score-name">score 2</span><span class="per-score-pct">6/7 (86%)</span></div>
+        <div class="per-score-bar-wrap"><div class="per-score-bar" style="width:86%;background:var(--s2)"></div></div>
+      </div>
+      <div class="per-score-row">
+        <div class="per-score-header"><span class="per-score-name">score 3</span><span class="per-score-pct">3/4 (75%)</span></div>
+        <div class="per-score-bar-wrap"><div class="per-score-bar" style="width:75%;background:var(--s3)"></div></div>
+      </div>
+      <div class="per-score-row">
+        <div class="per-score-header"><span class="per-score-name">score 4</span><span class="per-score-pct">7/7 (100%)</span></div>
+        <div class="per-score-bar-wrap"><div class="per-score-bar" style="width:100%;background:var(--s4)"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Training config -->
+  <div class="card">
+    <div class="section-title">Training Configuration</div>
+    <table class="config-table">
+      <tr><td>Base model</td><td>unsloth/mistral-7b-instruct-v0.2-bnb-4bit</td></tr>
+      <tr><td>LoRA rank / alpha</td><td>16 / 128</td></tr>
+      <tr><td>Target modules</td><td>q_proj k_proj v_proj o_proj gate_proj up_proj down_proj</td></tr>
+      <tr><td>Dropout / weight decay</td><td>0.05 / 0.01</td></tr>
+      <tr><td>Max epochs</td><td>10 (early stopping patience=3)</td></tr>
+      <tr><td>Learning rate</td><td>2e-4 · cosine scheduler · 10 warmup steps</td></tr>
+      <tr><td>Batch / grad accum</td><td>2 × 4</td></tr>
+      <tr><td>Dataset split</td><td>70% train · 15% val · 15% test (31 test examples)</td></tr>
+      <tr><td>Pre inference time</td><td>187.2s total (6.0s / example)</td></tr>
+      <tr><td>Post inference time</td><td>667.9s total (21.5s / example)</td></tr>
+      <tr><td>Parse failures</td><td>0 / 31 (both phases)</td></tr>
+    </table>
+  </div>
+
+</div>
+
+<script>
+  // ── Navigation ──────────────────────────────────────────────────────────────
+  function showPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  // ── Tasks ───────────────────────────────────────────────────────────────────
+  let tasks = [];
+
+  async function loadTasks() {
+    try {
+      const res = await fetch("/tasks");
+      tasks = await res.json();
+      const select = document.getElementById("taskSelect");
+      tasks.forEach((task, i) => {
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = task.task.length > 80 ? task.task.slice(0, 80) + "…" : task.task;
+        select.appendChild(opt);
+      });
+      updateTask();
+    } catch (e) {
+      document.getElementById("taskText").textContent = "Could not load tasks. Make sure the server is running.";
+    }
+  }
+
+  function updateTask() {
+    const id = document.getElementById("taskSelect").value;
+    if (!tasks[id]) return;
+    document.getElementById("taskText").textContent = tasks[id].task;
+    // Clear reference when task changes — only show after evaluation
+    document.getElementById("referenceQuery").value = "";
+  }
+
+  // ── Parse rationale ─────────────────────────────────────────────────────────
+  function parseRationale(text) {
+    if (!text) return [];
+    const criteria = ["Query Structure", "Field Validity", "Operator Correctness", "Task Alignment"];
+    const results = [];
+    criteria.forEach(name => {
+      const re = new RegExp(`\\[${name}\\]([^\\[]*)`, "i");
+      const m = text.match(re);
+      if (m) {
+        const cleaned = m[1].trim().replace(/^[:\-–\s]+/, "");
+        if (cleaned) results.push({ name, text: cleaned });
+      }
+    });
+    if (!results.length && text.trim()) {
+      results.push({ name: "Feedback", text: text.replace(/\{[^}]*\}/g, "").trim() || text });
+    }
+    return results;
+  }
+
+  // ── Render results ──────────────────────────────────────────────────────────
+  function renderResults(score, rationale, taskId) {
+    const scoreEl = document.getElementById("scoreNumber");
+    const stars   = document.querySelectorAll(".star");
+    const content = document.getElementById("rationaleContent");
+    const badge   = document.getElementById("badge");
+    const refArea = document.getElementById("referenceQuery");
+
+    scoreEl.textContent = score !== null ? score : "?";
+    scoreEl.className   = "score-number" + (score !== null ? ` s${score}` : "");
+    stars.forEach((s, i) => s.classList.toggle("on", i < score));
+
+    badge.className   = "badge badge-done";
+    badge.textContent = "Done";
+
+    // Show correct answer after evaluation
+    if (tasks[taskId] && tasks[taskId].reference) {
+      refArea.value = JSON.stringify(tasks[taskId].reference, null, 2);
+    }
+
+    const criteria = parseRationale(rationale);
+    if (criteria.length) {
+      content.innerHTML = '<div class="criteria-list">' +
+        criteria.map(c => `
+          <div class="criterion">
+            <div class="criterion-name">${c.name}</div>
+            <div class="criterion-text">${c.text}</div>
+          </div>`).join("") + "</div>";
+    } else {
+      content.innerHTML = `<p style="font-size:13px;line-height:1.6;color:var(--text2)">${rationale || "No rationale provided."}</p>`;
+    }
+  }
+
+  // ── Evaluate ────────────────────────────────────────────────────────────────
+  async function evaluateQuery() {
+    const btn     = document.getElementById("evalBtn");
+    const badge   = document.getElementById("badge");
+    const status  = document.getElementById("statusText");
+    const scoreEl = document.getElementById("scoreNumber");
+    const stars   = document.querySelectorAll(".star");
+    const content = document.getElementById("rationaleContent");
+    const task_id = document.getElementById("taskSelect").value;
+
+    const submissionText = document.getElementById("query").value;
+
+    try {
+      JSON.parse(submissionText);
+    } catch (e) {
+      badge.className   = "badge badge-error";
+      badge.textContent = "Error";
+      content.innerHTML = `
+        <div class="criterion">
+          <div class="criterion-name">JSON Parse Error</div>
+          <div class="criterion-text">Your query is not valid JSON. Check for missing brackets, commas, or quotes.<br><br>
+            <code style="font-size:12px;color:var(--red)">${e.message}</code>
+          </div>
+        </div>`;
+      return;
+    }
+
+    btn.disabled = true;
+    btn.classList.add("loading");
+    badge.className   = "badge badge-loading";
+    badge.textContent = "Processing";
+    status.textContent = "Sending to model…";
+    scoreEl.textContent = "—";
+    scoreEl.className = "score-number";
+    stars.forEach(s => s.classList.remove("on"));
+    content.innerHTML = '<p class="placeholder-text">Model is generating feedback…</p>';
+
+    try {
+      const response = await fetch("/evaluate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ task_id, submission: submissionText }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || `Server error ${response.status}`);
+      }
+
+      const reader  = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      status.textContent = "Model is thinking…";
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop();
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const raw = line.slice(6).trim();
+          if (!raw) continue;
+
+          let msg;
+          try { msg = JSON.parse(raw); } catch { continue; }
+
+          if (msg.token) {
+          }
+
+          if (msg.done) {
+            status.textContent    = "";
+            renderResults(msg.score, msg.rationale, task_id);
+          }
+        }
+      }
+
+    } catch (err) {
+      badge.className   = "badge badge-error";
+      badge.textContent = "Error";
+      status.textContent = "";
+      content.innerHTML = `
+        <div class="criterion">
+          <div class="criterion-name">Connection Error</div>
+          <div class="criterion-text">${err.message || "Could not reach the server."}</div>
+        </div>`;
+    }
+
+    btn.disabled = false;
+    btn.classList.remove("loading");
+  }
+
+  loadTasks();
+</script>
+</body>
+</html>
