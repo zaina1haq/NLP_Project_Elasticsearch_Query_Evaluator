@@ -1,0 +1,26 @@
+{
+  "phase": "pre_finetuning",
+  "model": "unsloth/mistral-7b-instruct-v0.2-bnb-4bit",
+  "adapter": "none (base model)",
+  "n_total": 31,
+  "n_valid": 31,
+  "parse_failures": 0,
+  "accuracy": 0.5484,
+  "mae": 0.7419,
+  "qwk": 0.6895,
+  "pred_distribution": {
+    "0": 6,
+    "1": 3,
+    "2": 8,
+    "3": 3,
+    "4": 11
+  },
+  "gt_distribution": {
+    "0": 8,
+    "1": 5,
+    "2": 7,
+    "3": 4,
+    "4": 7
+  },
+  "inference_seconds": 187.2
+}

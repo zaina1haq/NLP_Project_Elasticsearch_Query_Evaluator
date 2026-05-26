@@ -1,0 +1,53 @@
+{
+  "phase": "post_finetuning",
+  "model": "unsloth/mistral-7b-instruct-v0.2-bnb-4bit",
+  "adapter": "outputs/finetuned_model/lora_adapter",
+  "n_total": 31,
+  "n_valid": 31,
+  "parse_failures": 0,
+  "accuracy": 0.8065,
+  "mae": 0.1935,
+  "qwk": 0.9565,
+  "per_score_accuracy": {
+    "0": {
+      "total": 8,
+      "correct": 8,
+      "acc": 1.0
+    },
+    "1": {
+      "total": 5,
+      "correct": 1,
+      "acc": 0.2
+    },
+    "2": {
+      "total": 7,
+      "correct": 6,
+      "acc": 0.8571
+    },
+    "3": {
+      "total": 4,
+      "correct": 3,
+      "acc": 0.75
+    },
+    "4": {
+      "total": 7,
+      "correct": 7,
+      "acc": 1.0
+    }
+  },
+  "pred_distribution": {
+    "0": 9,
+    "1": 1,
+    "2": 10,
+    "3": 4,
+    "4": 7
+  },
+  "gt_distribution": {
+    "0": 8,
+    "1": 5,
+    "2": 7,
+    "3": 4,
+    "4": 7
+  },
+  "inference_seconds": 667.9
+}

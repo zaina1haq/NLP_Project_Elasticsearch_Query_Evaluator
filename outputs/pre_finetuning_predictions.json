@@ -1,0 +1,281 @@
+[
+  {
+    "idx": 0,
+    "task": "Find all documents associated with country code \"ca\".",
+    "ground_truth": 0,
+    "predicted_score": 0,
+    "predicted_rationale": "",
+    "raw_output": "{\n\"score\" : 0,\n\"rationale\" : \"The student submission is completely unrelated to the stated task. The 'match_all' query will return all documents in the index, regardless of the country code. This is a clear violation of the [Task Alignment] dimension of the scoring rubric.\"",
+    "parse_ok": true
+  },
+  {
+    "idx": 1,
+    "task": "Filter by countryKeys to return only \"fr\" documents.",
+    "ground_truth": 3,
+    "predicted_score": 3,
+    "predicted_rationale": "",
+    "raw_output": "{\n\"score\" : 3,\n\"rationale\" : \"The student submission is mostly correct with minor issues. The outer query structure is correct (term query under query), but the query operator used (match instead of term) is imprecise for the data type of the 'countryKeys' field. The field name is correct.\"",
+    "parse_ok": true
+  },
+  {
+    "idx": 2,
+    "task": "Retrieve every document where the content field contains the word \"money-fx\".",
+    "ground_truth": 3,
+    "predicted_score": 1,
+    "predicted_rationale": "",
+    "raw_output": "{\n\"score\" : 1,\n\"rationale\" : \"The student submission is a major error as the field used for querying ('title') is different from the field mentioned in the task ('content').\"",
+    "parse_ok": true
+  },
+  {
+    "idx": 3,
+    "task": "Retrieve \"acq\" articles from oldest to newest.",
+    "ground_truth": 1,
+    "predicted_score": 3,
+    "predicted_rationale": "",
+    "raw_output": "{\n\"score\" : 3,\n\"rationale\" : \"The query structure is mostly correct with a minor issue: the 'order' of the 'date' sort is incorrect. The field names used are all correct. The operator correctness is logically correct but one is imprecise: the 'order' of the 'date' sort is descending instead of ascending. The query would return results that are broadly correct but with a minor precision issue that can be easily fixed by changing the 'order' to 'asc'.\"",
+    "parse_ok": true
+  },
+  {
+    "idx": 4,
+    "task": "Retrieve articles associated with country code \"us\" that discuss \"grain\".",
+    "ground_truth": 0,
+    "predicted_score": 2,
+    "predicted_rationale": "",
+    "raw_output": "{\n\"score\" : 2,\n\"rationale\" : \"The student submission is partially correct. The outer query structure is present with a 'search' clause, but the required 'query' clause is missing. [Query Structure] The student's query uses the 'search' clause instead of the 'query' clause. [Task Alignment] The query partially satisfies the task as it retrieves articles with the term 'grain', but it does not filter by country code 'us'. [Field Validity] All field names that are present are correct. [Operator Correctness] Operators used are not explicitly stated in the student submission.\"",
+    "parse_ok": true
+  },
+  {
+    "idx": 5,
+    "task": "Find articles from country \"gb\" published in 1987.",
+    "ground_truth": 2,
+    "predicted_score": 2,
+    "predicted_rationale": "The query structure is correct (bool with must), but the required filter clause is entirely missing. Field validity is not an issue as the fields used are not specified in the submission. Operator correctness is not applicable as no operators are used in the submission.",
+    "raw_output": "{\n\"score\" : 2,\n\"rationale\" : \"The query structure is correct (bool with must), but the required filter clause is entirely missing. Field validity is not an issue as the fields used are not specified in the submission. Operator correctness is not applicable as no operators are used in the submission.\"\n}",
+    "parse_ok": true
+  },
+  {
+    "idx": 6,
+    "task": "Get all documents discussing \"earn\" from 1987 onwards.",
+    "ground_truth": 0,
+    "predicted_score": 0,
+    "predicted_rationale": "",
+    "raw_output": "{\n\"score\" : 0,\n\"rationale\" : \"The student submission is completely unrelated to the stated task. It uses the 'search' key instead of 'query' and the 'order' key instead of 'sort'. The 'match' operator is used on the incorrect field 'content' instead of 'date' or 'title'. The query is not aligned with the task as it searches for 'grain' instead of 'earn'. Therefore, the score is 0.\"",
+    "parse_ok": true
+  },
+  {
+    "idx": 7,
+    "task": "Find articles from country \"gb\" published in 1987.",
+    "ground_truth": 0,
+    "predicted_score": 0,
+    "predicted_rationale": "",
+    "raw_output": "{\n\"score\" : 0,\n\"rationale\" : \"The student submission is completely unrelated to the stated task. It uses a 'filter' query with a 'match' operator on the 'content' field, but the task requires a 'term' filter on 'countryKeys' and a range filter on 'date'. This query would not return any documents related to the country 'gb' published in 1987.\"",
+    "parse_ok": true
+  },
+  {
+    "idx": 8,
+    "task": "Find all documents associated with country code \"fr\".",
+    "ground_truth": 2,
+    "predicted_score": 2,
+    "predicted_rationale": "",
+    "raw_output": "{\n\"score\" : 2,\n\"rationale\" : \"The student submission is partially correct. The outer query structure is present, but the field used for querying is incorrect. The 'places' field is not a valid field for querying country codes in the index mapping.\"",
+    "parse_ok": true
+  },
+  {
+    "idx": 9,
+    "task": "Multi-field search for \"earn\" covering title and content.",
+    "ground_truth": 0,
+    "predicted_score": 0,
+    "predicted_rationale": "",
+    "raw_output": "{\n\"score\" : 0,\n\"rationale\" : \"The student submission is completely unrelated to the stated task. It uses the 'terms' operator on the 'content' field, but the task requires a multi-field search for the term 'earn' in both the 'title' and 'content' fields. This would throw a parsing error or return results that have nothing to do with the task.\"",
+    "parse_ok": true
+  },
+  {
+    "idx": 10,
+    "task": "Retrieve every document where the content field contains the word \"crude\".",
+    "ground_truth": 4,
+    "predicted_score": 4,
+    "predicted_rationale": "",
+    "raw_output": "{\n\"score\" : 4,\n\"rationale\" : \"The student submission is fully correct. It uses the exact query structure required by the task, with a 'match' query targeting the 'content' field. The field name is valid and matches the index mapping. The 'match' operator is also correct for the text data type of the 'content' field.\"",
+    "parse_ok": true
+  },
+  {
+    "idx": 11,
+    "task": "Retrieve all documents that are tagged with the topic \"money-fx\".",
+    "ground_truth": 2,
+    "predicted_score": 1,
+    "predicted_rationale": "",
+    "raw_output": "{\n\"score\" : 1,\n\"rationale\" : \"The student submission is missing a value for the 'topics' field in the query, making it an incomplete query structure. [Query Structure]: Major errors.\"",
+    "parse_ok": true
+  },
+  {
+    "idx": 12,
+    "task": "Retrieve articles associated with country code \"us\" that discuss \"grain\".",
+    "ground_truth": 1,
+    "predicted_score": 2,
+    "predicted_rationale": "",
+    "raw_output": "{\n\"score\" : 2,\n\"rationale\" : \"The student submission is partially correct. The outer query structure is present (bool with should), but a required clause (filter) is missing. All field names are correct.\"",
+    "parse_ok": true
+  },
+  {
+    "idx": 13,
+    "task": "Retrieve articles mentioning \"oil prices\" in their title or body text.",
+    "ground_truth": 2,
+    "predicted_score": 2,
+    "predicted_rationale": "",
+    "raw_output": "{\n\"score\" : 2,\n\"rationale\" : \"The student submission is partially correct. The outer query structure is present with a 'match' query on the 'title' field. However, the submission is missing the 'content' field, which is required to fully satisfy the task. Therefore, the result set would be incomplete.\"",
+    "parse_ok": true
+  },
+  {
+    "idx": 14,
+    "task": "Retrieve articles that were published on or after 1987-03-01.",
+    "ground_truth": 3,
+    "predicted_score": 2,
+    "predicted_rationale": "",
+    "raw_output": "{\n\"score\" : 2,\n\"rationale\" : \"The student submission is mostly correct with minor issues. The query structure is correct with a range clause present. However, the field validity is not optimal as the date provided is one day later than the required date in the task. The task alignment is met as the query will return articles published on or after the given date, but the result set may include articles published on March 02, 1987, which is not part of the task.\"",
+    "parse_ok": true
+  },
+  {
+    "idx": 15,
+    "task": "Find documents containing a georeference with country_code \"us\".",
+    "ground_truth": 4,
+    "predicted_score": 4,
+    "predicted_rationale": "",
+    "raw_output": "{\n\"score\" : 4,\n\"rationale\" : \"The student submission is identical to the reference query, both in query structure and field validity. The 'nested' query with 'term' operator on 'georeferences.country_code' is exactly correct for the task.\"",
+    "parse_ok": true
+  },
+  {
+    "idx": 16,
+    "task": "Get documents where countryKeys includes \"us\".",
+    "ground_truth": 3,
+    "predicted_score": 2,
+    "predicted_rationale": "",
+    "raw_output": "{\n\"score\" : 2,\n\"rationale\" : \"The student submission is partially correct. The outer query structure is correct (a 'query' object with a 'match' clause), but a required clause (in this case, a 'term' clause would be required to meet the task) is missing. The field name used, 'countryKeys', is also correct.\"",
+    "parse_ok": true
+  },
+  {
+    "idx": 17,
+    "task": "Find all documents associated with country code \"us\".",
+    "ground_truth": 4,
+    "predicted_score": 4,
+    "predicted_rationale": "",
+    "raw_output": "{\n\"score\" : 4,\n\"rationale\" : \"The submission is fully correct: [Query Structure] The query uses exactly the right clause type ('term') and is correctly nested and composed. [Field Validity] Every field name ('countryKeys') is exactly correct and matches the index mapping. [Operator Correctness] The operator ('term') is exactly right for the data type of the field. [Task Alignment] The query returns precisely the documents the task describes.\"",
+    "parse_ok": true
+  },
+  {
+    "idx": 18,
+    "task": "Retrieve articles mentioning \"money-fx\" in their title or body text.",
+    "ground_truth": 0,
+    "predicted_score": 0,
+    "predicted_rationale": "",
+    "raw_output": "{\n\"score\" : 0,\n\"rationale\" : \"The student submission is completely unrelated to the stated task. It uses the 'match' operator on the 'content' field, but the task requires mention of 'money-fx' in the title or body text. This would either throw a parsing error or return results that have nothing to do with what was asked.\"",
+    "parse_ok": true
+  },
+  {
+    "idx": 19,
+    "task": "Find all news articles whose body text mentions \"trade\".",
+    "ground_truth": 2,
+    "predicted_score": 3,
+    "predicted_rationale": "",
+    "raw_output": "{\n\"score\" : 3,\n\"rationale\" : \"The student submission is mostly correct with minor issues. The query structure is correct with a 'match' clause used on the 'body' field. However, the field name 'body' is slightly suboptimal as 'content' might be the correct field name according to the index mapping. The operator 'match' is logically correct but it might be more precise to use 'term' on a keyword field. The query would return broadly correct results but with minor precision issues that a small one-line fix would resolve.\"",
+    "parse_ok": true
+  },
+  {
+    "idx": 20,
+    "task": "Find documents containing a georeference with country_code \"ca\".",
+    "ground_truth": 2,
+    "predicted_score": 4,
+    "predicted_rationale": "",
+    "raw_output": "{\n\"score\" : 4,\n\"rationale\" : \"The student submission is fully correct. The query structure is correct with a nested query used to search for the 'country_code' field within the 'georefs' field. The field validity is correct as 'georeferences' and 'country_code' match the index mapping. The operator correctness is also correct as 'term' operator is used to search for an exact term in the 'country_code' field.\"",
+    "parse_ok": true
+  },
+  {
+    "idx": 21,
+    "task": "Get all documents whose topics field contains \"grain\".",
+    "ground_truth": 1,
+    "predicted_score": 2,
+    "predicted_rationale": "",
+    "raw_output": "{\n\"score\" : 2,\n\"rationale\" : \"The student submission is partially correct. The outer query structure is present and the field name 'tags' is used correctly, but the field name 'topics' which is mentioned in the task description is missing. This would result in the query returning documents with the tag 'grain' instead of those with the topic 'grain'. Therefore, the query is partially aligned with the task but the result set would be incomplete.\"",
+    "parse_ok": true
+  },
+  {
+    "idx": 22,
+    "task": "Retrieve articles that have a georeference entry where country_code is \"us\".",
+    "ground_truth": 1,
+    "predicted_score": 4,
+    "predicted_rationale": "",
+    "raw_output": "{\n\"score\" : 4,\n\"rationale\" : \"The student submission is fully correct. It uses the term operator correctly on the 'georeferences.country\\_code' field, which is exactly what is required to satisfy the task.\"",
+    "parse_ok": true
+  },
+  {
+    "idx": 23,
+    "task": "Find all documents associated with country code \"br\".",
+    "ground_truth": 4,
+    "predicted_score": 4,
+    "predicted_rationale": "",
+    "raw_output": "{\n\"score\" : 4,\n\"rationale\" : \"The submission is fully correct: [Query Structure] The query uses exactly the right clause type ('term') and is correctly nested and composed. [Field Validity] Every field name ('countryKeys') is exactly correct and matches the index mapping. [Operator Correctness] The operator ('term') is exactly right for the data type of the field. [Task Alignment] The query returns precisely the documents the task describes.\"",
+    "parse_ok": true
+  },
+  {
+    "idx": 24,
+    "task": "Retrieve articles that were published in 1987.",
+    "ground_truth": 4,
+    "predicted_score": 4,
+    "predicted_rationale": "",
+    "raw_output": "{\n\"score\" : 4,\n\"rationale\" : \"The submission is fully correct. It uses the exact query structure required for a date range query, with a 'range' clause under the 'query' key. The 'date' field is used correctly with 'gte' and 'lte' operators. The submission is also aligned with the task, as it retrieves articles published in 1987.\"",
+    "parse_ok": true
+  },
+  {
+    "idx": 25,
+    "task": "Get all documents whose topics field contains \"crude\".",
+    "ground_truth": 0,
+    "predicted_score": 1,
+    "predicted_rationale": "",
+    "raw_output": "{\n\"score\" : 1,\n\"rationale\" : \"The student submission uses the 'filter' clause instead of the 'query' clause, which is a major error in [Query Structure]. The 'filter' clause is used for modifying documents based on certain conditions, while the 'query' clause is used for retrieving documents based on a search query. The 'filter' clause in the student submission is not aligned with the task of retrieving documents based on the 'topics' field containing the term 'crude'. Therefore, the score is 1.\"",
+    "parse_ok": true
+  },
+  {
+    "idx": 26,
+    "task": "Which documents have a nested georeference whose country_code equals \"jp\"?",
+    "ground_truth": 4,
+    "predicted_score": 4,
+    "predicted_rationale": "",
+    "raw_output": "{\n\"score\" : 4,\n\"rationale\" : \"The student submission is identical to the reference query, both in query structure and field validity. The 'nested' query with 'term' operator on 'georeferences.country_code' is exactly correct for the task.\"",
+    "parse_ok": true
+  },
+  {
+    "idx": 27,
+    "task": "Pull all documents whose content includes the keyword \"grain\".",
+    "ground_truth": 4,
+    "predicted_score": 4,
+    "predicted_rationale": "",
+    "raw_output": "{\n\"score\" : 4,\n\"rationale\" : \"The submission is fully correct. It uses the exact query structure required for the task, with a 'match' query on the 'content' field. All field names and operators are also correct.\"",
+    "parse_ok": true
+  },
+  {
+    "idx": 28,
+    "task": "Retrieve articles that were published between 1987-01-01 and 1987-03-31.",
+    "ground_truth": 1,
+    "predicted_score": 4,
+    "predicted_rationale": "",
+    "raw_output": "{\n\"score\" : 4,\n\"rationale\" : \"The student submission is fully correct. It uses the 'range' operator with the correct 'gte' and 'lte' parameters to filter documents based on a date range. The field name 'published_at' is also correct and matches the index mapping. Therefore, the query structure, field validity, operator correctness, and task alignment are all satisfied.\"",
+    "parse_ok": true
+  },
+  {
+    "idx": 29,
+    "task": "Pull all documents whose content includes the keyword \"acq\".",
+    "ground_truth": 2,
+    "predicted_score": 4,
+    "predicted_rationale": "",
+    "raw_output": "{\n\"score\" : 4,\n\"rationale\" : \"The student submission is fully correct. It uses the 'bool' query with a 'must' clause containing a 'match' query, which is the exact structure of the reference query. Both the 'query' and 'match' keys are correctly used and all field names are valid as they match the index mapping. The 'content' field is correctly queried with the keyword 'acq'. Therefore, the query structure, field validity, operator correctness, and task alignment are all satisfied.\"",
+    "parse_ok": true
+  },
+  {
+    "idx": 30,
+    "task": "Pull all documents whose content includes the keyword \"money-fx\".",
+    "ground_truth": 0,
+    "predicted_score": 0,
+    "predicted_rationale": "",
+    "raw_output": "{\n\"score\" : 0,\n\"rationale\" : \"The student submission is completely unrelated to the stated task. The query is using a 'bool' query with a 'filter' clause, but the filter clause contains a 'match' query for the field 'content' with the keyword 'oil'. However, the task is to pull all documents whose content includes the keyword 'money-fx'. This query would not return any documents related to the task.\"",
+    "parse_ok": true
+  }
+]

@@ -1,0 +1,71 @@
+{
+  "pre_finetuning": {
+    "accuracy": 0.5484,
+    "mae": 0.7419,
+    "qwk": 0.6895
+  },
+  "post_finetuning": {
+    "accuracy": 0.8065,
+    "mae": 0.1935,
+    "qwk": 0.9565
+  },
+  "delta": {
+    "accuracy": 0.2581,
+    "mae": -0.5484,
+    "qwk": 0.267
+  },
+  "score_distribution": {
+    "ground_truth": {
+      "0": 8,
+      "1": 5,
+      "2": 7,
+      "3": 4,
+      "4": 7
+    },
+    "pre_predicted": {
+      "0": 6,
+      "1": 3,
+      "2": 8,
+      "3": 3,
+      "4": 11
+    },
+    "post_predicted": {
+      "0": 9,
+      "1": 1,
+      "2": 10,
+      "3": 4,
+      "4": 7
+    }
+  },
+  "per_score_accuracy_post": {
+    "0": {
+      "total": 8,
+      "correct": 8,
+      "acc": 1.0
+    },
+    "1": {
+      "total": 5,
+      "correct": 1,
+      "acc": 0.2
+    },
+    "2": {
+      "total": 7,
+      "correct": 6,
+      "acc": 0.8571
+    },
+    "3": {
+      "total": 4,
+      "correct": 3,
+      "acc": 0.75
+    },
+    "4": {
+      "total": 7,
+      "correct": 7,
+      "acc": 1.0
+    }
+  },
+  "notes": {
+    "base_over_predicts_4": true,
+    "base_under_predicts_1": true
+  }
+}
