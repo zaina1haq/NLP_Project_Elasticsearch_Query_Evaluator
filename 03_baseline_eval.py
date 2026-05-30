@@ -1,21 +1,3 @@
-"""
-03_baseline_eval.py
-====================
-Step 3 — Evaluate the BASE Mistral model on the test set BEFORE fine-tuning.
-
-This gives the "before" baseline that Step 6 will compare against after
-fine-tuning. Must be run before 04_finetune.py.
-
-✓ CORRECT PATHS FOR YOUR PROJECT STRUCTURE:
-Reads  : jsonl_format/test.jsonl
-Writes : outputs/pre_finetuning_predictions.json
-         outputs/pre_finetuning_metrics.json
-
-Run:
-    python 03_baseline_eval.py
-    python 03_baseline_eval.py --test_path jsonl_format/test.jsonl --out_dir outputs
-"""
-
 import json
 import time
 import re
@@ -23,7 +5,8 @@ import argparse
 from pathlib import Path
 from collections import Counter
 
-# ─── CLI ─────────────────────────────────────────────────────────────────────
+# 1. Configure command-line parameters for loading the evaluation dataset,
+# selecting the model, and controlling inference execution settings
 parser = argparse.ArgumentParser()
 parser.add_argument("--test_path",  default="jsonl_format/test.jsonl",
                     help="Path to test JSONL file (default: jsonl_format/test.jsonl)")
@@ -37,18 +20,20 @@ parser.add_argument("--batch_size",     type=int, default=1,
                     help="Inference batch size (keep at 1 for 4-bit on T4)")
 args = parser.parse_args()
 
-# Create output directory
+# 2. Create the output directory and display its location for storing
+# evaluation results and generated artifacts
 output_dir = Path(args.out_dir)
 output_dir.mkdir(parents=True, exist_ok=True)
 
-print(f"📁 Output directory: {output_dir.resolve()}\n")
+print(f"Output directory: {output_dir.resolve()}\n")
 
-# ─── 1. Load test set ────────────────────────────────────────────────────────
-print(f"📖 Loading test set from: {args.test_path}")
+# 3. Load and validate the test dataset to ensure all evaluation examples
+# are available before starting the baseline model assessment
+print(f"Loading test set from: {args.test_path}")
 
 test_path = Path(args.test_path)
 if not test_path.exists():
-    print(f"❌ Error: File not found: {args.test_path}")
+    print(f"Error: File not found: {args.test_path}")
     print(f"\nExpected path structure:")
     print(f"  NLP_FINAL_PROJECT/")
     print(f"  ├── jsonl_format/")
@@ -60,13 +45,14 @@ if not test_path.exists():
 try:
     with open(args.test_path) as f:
         test_items = [json.loads(line) for line in f]
-    print(f"✓ Loaded {len(test_items)} test examples\n")
+    print(f"Loaded {len(test_items)} test examples\n")
 except Exception as e:
-    print(f"❌ Error reading file: {e}")
+    print(f"Error reading file: {e}")
     exit(1)
 
-# ─── 2. Load base model ──────────────────────────────────────────────────────
-print(f"🤖 Loading base model: {args.model_name}")
+# 4. Load the pretrained base model and tokenizer in 4-bit quantized mode
+# and configure them for efficient inference execution
+print(f"Loading base model: {args.model_name}")
 print("  (this may take 2–4 minutes on first run while downloading weights)\n")
 
 from unsloth import FastLanguageModel
@@ -81,9 +67,10 @@ model, tokenizer = FastLanguageModel.from_pretrained(
 
 # Inference mode — no gradient computation needed
 FastLanguageModel.for_inference(model)
-print("✓ Model loaded and ready for inference.\n")
+print("Model loaded and ready for inference.\n")
 
-# ─── 3. Score parser ─────────────────────────────────────────────────────────
+# 5. Define a robust output parser that extracts evaluation scores and
+# rationales from model-generated responses using multiple fallback strategies
 def parse_model_output(raw_text: str):
     """
     Extract score and rationale from the model's raw output string.
@@ -130,9 +117,9 @@ def parse_model_output(raw_text: str):
     # All strategies failed
     return None, text, False
 
-# ─── 4. Run inference ────────────────────────────────────────────────────────
-print(f"⚙️  Running inference on {len(test_items)} examples …")
-print("  (each example takes ~5–15 seconds on T4 GPU)\n")
+# 6. Run model inference on the test set, generate evaluation predictions,
+# parse the outputs, and collect results for performance analysis
+print(f"Running inference on {len(test_items)} examples …")
 
 results   = []
 t_start   = time.time()
@@ -180,7 +167,7 @@ for idx, item in enumerate(test_items):
     # Progress log
     gt   = item["score"]
     pred = predicted_score if predicted_score is not None else "?"
-    ok   = "✓" if parse_ok else "✗ parse fail"
+    ok   = "Parsed" if parse_ok else "parse failed"
     match = "=" if predicted_score == gt else "≠"
     elapsed = time.time() - t_start
     print(f"  [{idx+1:2d}/{len(test_items)}] "
@@ -189,7 +176,8 @@ for idx, item in enumerate(test_items):
 
 total_time = time.time() - t_start
 
-# ─── 5. Compute metrics ──────────────────────────────────────────────────────
+# 7. Compute baseline evaluation metrics by comparing predicted scores against
+# ground-truth labels while tracking parsing reliability and score distributions
 def compute_metrics(results, phase="pre_finetuning"):
     """
     Compute accuracy, MAE, and Quadratic Weighted Kappa (QWK).
@@ -202,7 +190,7 @@ def compute_metrics(results, phase="pre_finetuning"):
     parse_failures = n_total - n_valid
 
     if n_valid == 0:
-        print("  ⚠  No parseable predictions — check model output format.")
+        print("No parseable predictions — check model output format.")
         return {"phase": phase, "n": n_total, "parse_failures": n_total,
                 "accuracy": 0, "mae": None, "qwk": None}
 
@@ -251,7 +239,8 @@ def compute_metrics(results, phase="pre_finetuning"):
 
 metrics = compute_metrics(results, phase="pre_finetuning")
 
-# ─── 6. Print report ─────────────────────────────────────────────────────────
+# 8. Display a comprehensive baseline evaluation report summarizing model
+# performance, score distributions, and inference statistics
 print("\n" + "="*55)
 print("PRE FINE-TUNING BASELINE RESULTS")
 print("="*55)
@@ -274,24 +263,24 @@ for s in range(5):
 print(f"\n  Total inference time: {metrics['inference_seconds']}s "
       f"({metrics['inference_seconds']/metrics['n_total']:.1f}s per example)")
 
-# ─── 7. Save outputs ─────────────────────────────────────────────────────────
+# 9. Save prediction outputs and evaluation metrics to disk for further
+# analysis, comparison, and fine-tuning experiments
 pred_path    = output_dir / "pre_finetuning_predictions.json"
 metrics_path = output_dir / "pre_finetuning_metrics.json"
 
 try:
     with open(pred_path, "w") as f:
         json.dump(results, f, indent=2)
-    print(f"\n✓ Saved predictions → {pred_path.resolve()}")
+    print(f"\nSaved predictions -> {pred_path.resolve()}")
 except Exception as e:
-    print(f"❌ Error saving predictions: {e}")
+    print(f"Error saving predictions: {e}")
     exit(1)
 
 try:
     with open(metrics_path, "w") as f:
         json.dump(metrics, f, indent=2)
-    print(f"✓ Saved metrics     → {metrics_path.resolve()}")
+    print(f"Saved metrics     -> {metrics_path.resolve()}")
 except Exception as e:
-    print(f"❌ Error saving metrics: {e}")
+    print(f"Error saving metrics: {e}")
     exit(1)
 
-print("\n📌 Next step: run 04_finetune.py")
