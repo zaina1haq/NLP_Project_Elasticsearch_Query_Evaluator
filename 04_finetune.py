@@ -13,9 +13,9 @@ MAX_SEQ_LENGTH = 1024 # maximum token length for each training sample
 
 # 2. Define the LoRA adaptation configuration used to efficiently fine-tune
 # the base model by updating a small subset of transformer parameters
-LORA_RANK      = 16    # higher rank = more capacity; 64 is a good balance for A100
-LORA_ALPHA     = 128   # typically 2× rank
-LORA_DROPOUT   = 0.05
+LORA_RANK      = 16    # Rank of the low-rank adaptation matrices that determine the learning capacity of the LoRA adapters
+LORA_ALPHA     = 128   # Scaling factor applied to LoRA updates to control their influence during training
+LORA_DROPOUT   = 0.05  # Dropout rate applied to LoRA layers to reduce overfitting and improve generalization
 LORA_TARGET_MODULES = [
     "q_proj", "k_proj", "v_proj", "o_proj",   # attention
     "gate_proj", "up_proj", "down_proj",        # feed-forward
@@ -28,8 +28,8 @@ DEFAULT_LR           = 2e-4   # standard for LoRA fine-tuning
 DEFAULT_BATCH_SIZE   = 2      # safe for A100 40GB with 4-bit + seq len 2048
 DEFAULT_GRAD_ACCUM   = 4      # A100 has enough VRAM — no accumulation needed
 DEFAULT_WARMUP_STEPS = 10     # ~7% of total steps for 140 examples × 10 epochs
-DEFAULT_LR_SCHEDULER = "cosine"
-DEFAULT_WEIGHT_DECAY = 0.01
+DEFAULT_LR_SCHEDULER = "cosine"   # Gradually decreases the learning rate following a cosine curve to improve convergence and training stability
+DEFAULT_WEIGHT_DECAY = 0.01       # Applies L2 regularization to model weights to reduce overfitting and improve generalization
 
 OUTPUT_DIR = Path("outputs/finetuned_model")
 
@@ -134,51 +134,63 @@ print(f"  Total steps: ~{total_steps}")
 print(f"  LR         : {args.lr}  scheduler={DEFAULT_LR_SCHEDULER}")
 
 training_args = TrainingArguments(
-    output_dir                  = str(Path(args.out_dir) / "checkpoints"),
-    num_train_epochs            = args.epochs,
-    per_device_train_batch_size = args.batch,
-    per_device_eval_batch_size  = args.batch,
-    gradient_accumulation_steps = DEFAULT_GRAD_ACCUM,
-    warmup_steps                = DEFAULT_WARMUP_STEPS,
-    learning_rate               = args.lr,
-    weight_decay                = DEFAULT_WEIGHT_DECAY,
-    lr_scheduler_type           = DEFAULT_LR_SCHEDULER,
+    output_dir                  = str(Path(args.out_dir) / "checkpoints"),  # Directory where checkpoints and training outputs are saved
+    num_train_epochs            = args.epochs,                              # Number of complete passes over the training dataset
+    per_device_train_batch_size = args.batch,                               # Number of training samples processed per GPU in each step
+    per_device_eval_batch_size  = args.batch,                               # Number of validation samples processed per GPU during evaluation
+    gradient_accumulation_steps = DEFAULT_GRAD_ACCUM,                       # Accumulate gradients across multiple steps to simulate a larger effective batch size
+    warmup_steps                = DEFAULT_WARMUP_STEPS,                     # Gradually increase the learning rate during the initial training steps
+    learning_rate               = args.lr,                                  # Initial learning rate used by the optimizer
+    weight_decay                = DEFAULT_WEIGHT_DECAY,                     # L2 regularization factor to reduce overfitting
+    lr_scheduler_type           = DEFAULT_LR_SCHEDULER,                     # Strategy used to adjust the learning rate throughout training
+
     # A100 uses bfloat16 — more stable than float16 for fine-tuning
-    fp16                        = not torch.cuda.is_bf16_supported(),
-    bf16                        = torch.cuda.is_bf16_supported(),
-    logging_steps               = 5,
-    eval_strategy         = "steps",
-    eval_steps                  = 20,
-    save_strategy               = "steps",
-    save_steps                  = 20,
-    load_best_model_at_end      = True,
-    metric_for_best_model       = "eval_loss",
-    greater_is_better           = False,
-    report_to                   = "none",   # set to "wandb" if you use Weights & Biases
-    seed                        = 42,
+    fp16                        = not torch.cuda.is_bf16_supported(),       # Enable float16 precision when bfloat16 is unavailable
+    bf16                        = torch.cuda.is_bf16_supported(),           # Enable bfloat16 precision on supported GPUs such as A100
+
+    logging_steps               = 5,                                        # Log training metrics every 5 optimization steps
+
+    eval_strategy               = "steps",                                  # Perform evaluation periodically based on training steps
+    eval_steps                  = 20,                                       # Run validation every 20 training steps
+
+    save_strategy               = "steps",                                  # Save model checkpoints periodically based on training steps
+    save_steps                  = 20,                                       # Save a checkpoint every 20 training steps
+
+    load_best_model_at_end      = True,                                     # Restore the checkpoint with the best validation performance after training
+    metric_for_best_model       = "eval_loss",                              # Metric used to determine the best checkpoint
+    greater_is_better           = False,                                    # Lower validation loss indicates better performance
+
+    report_to                   = "none",                                   # Disable external experiment tracking services
+    seed                        = 42,                                       # Fixed random seed for reproducibility
+
     # Multi-GPU: HuggingFace Accelerate handles device placement automatically
     # No extra config needed — it detects all available GPUs on the node
-    ddp_find_unused_parameters  = False,    # speeds up DDP; safe for LoRA
+    ddp_find_unused_parameters  = False,                                    # Disable unused parameter detection to improve distributed training efficiency
 )
 
 # 9. Initialize the supervised fine-tuning trainer with the model, datasets,
 # training configuration, and early stopping mechanism
 trainer = SFTTrainer(
-    model              = model,
-    tokenizer          = tokenizer,
-    train_dataset      = train_ds,
-    eval_dataset       = val_ds,
-    dataset_text_field = "text",
-    max_seq_length     = MAX_SEQ_LENGTH,
-    dataset_num_proc   = 4,       # parallel tokenisation workers; safe on A100 nodes
-    packing            = False,   # keep off for instruction tuning — don't mix examples
-    args               = training_args,
+    model              = model,              # The LoRA-enhanced Mistral model that will be fine-tuned
+    tokenizer          = tokenizer,          # Tokenizer used to convert text into token IDs for the model
+
+    train_dataset      = train_ds,           # Training dataset used to update model parameters
+    eval_dataset       = val_ds,             # Validation dataset used to monitor performance during training
+
+    dataset_text_field = "text",             # Column containing the formatted prompt-response examples
+    max_seq_length     = MAX_SEQ_LENGTH,     # Maximum sequence length allowed for each training example
+
+    dataset_num_proc   = 4,                  # Number of parallel processes used for dataset tokenization
+    packing            = False,              # Keep each example separate instead of combining multiple examples into one sequence
+
+    args               = training_args,      # Training configuration including epochs, learning rate, batch size, and evaluation settings
+
     callbacks = [
-     EarlyStoppingCallback(
-        early_stopping_patience=3,
-        early_stopping_threshold=0.001
-    )
-] 
+        EarlyStoppingCallback(
+            early_stopping_patience=3,       # Stop training if validation loss does not improve for 3 consecutive evaluations
+            early_stopping_threshold=0.001   # Minimum improvement required to be considered a meaningful gain
+        )
+    ]
 )
 
 # 10. Execute the fine-tuning process and report training duration,
@@ -218,7 +230,8 @@ if args.save_merged:
     print("  Merged model saved.")
 
 # 13. Display a final fine-tuning summary that reports the training
-# configuration, resource usage, model artifacts, and next evaluation stepprint("\n" + "="*55)
+# configuration, resource usage, model artifacts, and next evaluation step
+print("\n" + "="*55)
 print("FINE-TUNING SUMMARY")
 print("="*55)
 print(f"  Base model       : {BASE_MODEL}")
