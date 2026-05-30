@@ -1,39 +1,18 @@
-"""
-04_finetune.py
-===============
-Step 4 — Fine-tune Mistral-7B-Instruct-v0.2 with Unsloth + LoRA.
-
-Optimised for NVIDIA A100 (40 GB or 80 GB).
-Automatically uses all GPUs visible on the current node via HuggingFace
-Accelerate — no SLURM or torchrun config required.
-
-Reads  : formatted/train.jsonl
-         formatted/val.jsonl
-Writes : outputs/finetuned_model/lora_adapter/   ← LoRA weights + tokenizer
-         outputs/finetuned_model/merged_16bit/    ← optional full merged model
-
-Single-GPU run:
-    python 04_finetune.py
-
-Multi-GPU run (uses all GPUs on the node automatically):
-    accelerate launch --multi_gpu 04_finetune.py
-
-With custom args:
-    python 04_finetune.py --epochs 10 --batch 8 --lr 2e-4
-"""
-
 import json
 import argparse
 import os
 import time
 from pathlib import Path
 from transformers import EarlyStoppingCallback
-# ─── Defaults ────────────────────────────────────────────────────────────────
+
+
+# 1. Define the base model configuration and maximum sequence length
+# used during fine-tuning and training sample preparation
 BASE_MODEL     = "unsloth/mistral-7b-instruct-v0.2-bnb-4bit"
 MAX_SEQ_LENGTH = 1024 # maximum token length for each training sample
 
-# LoRA config — these values are well-tested for instruction tuning
-# on small datasets with Mistral-7B
+# 2. Define the LoRA adaptation configuration used to efficiently fine-tune
+# the base model by updating a small subset of transformer parameters
 LORA_RANK      = 16    # higher rank = more capacity; 64 is a good balance for A100
 LORA_ALPHA     = 128   # typically 2× rank
 LORA_DROPOUT   = 0.05
@@ -42,7 +21,8 @@ LORA_TARGET_MODULES = [
     "gate_proj", "up_proj", "down_proj",        # feed-forward
 ]
 
-# Training defaults — tuned for A100 + small dataset (140 examples)
+# 3. Define the training hyperparameters and output configuration used
+# for LoRA fine-tuning on the Elasticsearch evaluation dataset
 DEFAULT_EPOCHS       = 10     # more epochs compensate for small dataset size
 DEFAULT_LR           = 2e-4   # standard for LoRA fine-tuning
 DEFAULT_BATCH_SIZE   = 2      # safe for A100 40GB with 4-bit + seq len 2048
@@ -53,7 +33,8 @@ DEFAULT_WEIGHT_DECAY = 0.01
 
 OUTPUT_DIR = Path("outputs/finetuned_model")
 
-# ─── CLI ─────────────────────────────────────────────────────────────────────
+# 4. Configure command-line arguments for dataset paths, training settings,
+# LoRA parameters, and model output management
 parser = argparse.ArgumentParser()
 parser.add_argument("--train_path", default="jsonl_format/train.jsonl")
 parser.add_argument("--val_path",   default="jsonl_format/val.jsonl")
@@ -68,7 +49,8 @@ args = parser.parse_args()
 
 Path(args.out_dir).mkdir(parents=True, exist_ok=True)
 
-# ─── 1. Load datasets ────────────────────────────────────────────────────────
+# 5. Load the training and validation datasets and report the number
+# of examples available for the fine-tuning process
 def load_jsonl(path):
     with open(path) as f:
         return [json.loads(line) for line in f]
@@ -81,7 +63,8 @@ print(f"  Val   : {len(val_raw)} examples")
 
 
 
-# ─── 2. Load base model + apply LoRA ─────────────────────────────────────────
+# 6. Load the quantized base model, configure GPU memory settings, and apply
+# LoRA adapters to enable efficient parameter-efficient fine-tuning
 print(f"\nLoading base model: {BASE_MODEL}")
 print("  (downloads ~4 GB of weights on first run)")
 
@@ -124,7 +107,8 @@ trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
 total     = sum(p.numel() for p in model.parameters())
 print(f"  Trainable params : {trainable:,}  ({100*trainable/total:.2f}% of {total:,} total)")
 
-# ─── 3. Prepare HuggingFace datasets ─────────────────────────────────────────
+# 7. Convert the formatted JSONL records into HuggingFace Dataset objects
+# for efficient training and validation during fine-tuning
 from datasets import Dataset
 
 def to_hf_dataset(records):
@@ -134,7 +118,8 @@ def to_hf_dataset(records):
 train_ds = to_hf_dataset(train_raw)
 val_ds   = to_hf_dataset(val_raw)
 
-# ─── 4. Training arguments ───────────────────────────────────────────────────
+# 8. Configure the fine-tuning strategy, optimization schedule, evaluation
+# settings, and checkpoint management for supervised instruction training
 from trl import SFTTrainer
 from transformers import TrainingArguments
 
@@ -176,7 +161,8 @@ training_args = TrainingArguments(
     ddp_find_unused_parameters  = False,    # speeds up DDP; safe for LoRA
 )
 
-# ─── 5. SFTTrainer ───────────────────────────────────────────────────────────
+# 9. Initialize the supervised fine-tuning trainer with the model, datasets,
+# training configuration, and early stopping mechanism
 trainer = SFTTrainer(
     model              = model,
     tokenizer          = tokenizer,
@@ -195,7 +181,8 @@ trainer = SFTTrainer(
 ] 
 )
 
-# ─── 6. Train ────────────────────────────────────────────────────────────────
+# 10. Execute the fine-tuning process and report training duration,
+# optimization progress, and final training performance metrics
 print("\n" + "="*55)
 print("Starting fine-tuning …")
 print("="*55)
@@ -208,19 +195,20 @@ print(f"\nTraining complete in {elapsed/60:.1f} minutes")
 print(f"  Total steps      : {trainer_stats.global_step}")
 print(f"  Final train loss : {trainer_stats.training_loss:.4f}")
 
-# ─── 7. Save LoRA adapter ────────────────────────────────────────────────────
+
+# 11. Save the trained LoRA adapter and tokenizer artifacts for later
+# inference, evaluation, or deployment without modifying the base model
 adapter_path = Path(args.out_dir) / "lora_adapter"
 print(f"\nSaving LoRA adapter → {adapter_path}")
 model.save_pretrained(str(adapter_path))
 tokenizer.save_pretrained(str(adapter_path))
 print("  Adapter saved.")
 
-# ─── 8. (Optional) Save merged 16-bit model ──────────────────────────────────
-# The merged model bakes the LoRA weights back into the base weights.
-# Useful for deployment but large (~14 GB). Skip unless you need it.
+# 12. Optionally merge the LoRA adapter into the base model weights and save
+# a standalone full-precision model for deployment and production use
 if args.save_merged:
     merged_path = Path(args.out_dir) / "merged_16bit"
-    print(f"\nSaving merged 16-bit model → {merged_path}")
+    print(f"\nSaving merged 16-bit model -> {merged_path}")
     print("  (this merges LoRA into base weights — takes ~3 minutes)")
     model.save_pretrained_merged(
         str(merged_path),
@@ -229,8 +217,8 @@ if args.save_merged:
     )
     print("  Merged model saved.")
 
-# ─── 9. Training summary ─────────────────────────────────────────────────────
-print("\n" + "="*55)
+# 13. Display a final fine-tuning summary that reports the training
+# configuration, resource usage, model artifacts, and next evaluation stepprint("\n" + "="*55)
 print("FINE-TUNING SUMMARY")
 print("="*55)
 print(f"  Base model       : {BASE_MODEL}")
@@ -243,7 +231,6 @@ print(f"  Precision        : {dtype_used}")
 print(f"  GPU count        : {torch.cuda.device_count()}")
 print(f"  Total time       : {elapsed/60:.1f} minutes")
 print(f"  Final train loss : {trainer_stats.training_loss:.4f}")
-print(f"\n  LoRA adapter     → {adapter_path}")
+print(f"\n  LoRA adapter     -> {adapter_path}")
 if args.save_merged:
-    print(f"  Merged model     → {Path(args.out_dir) / 'merged_16bit'}")
-print(f"\nNext step: run 05_post_finetuning_eval.py --adapter {adapter_path}")
+    print(f"  Merged model     -> {Path(args.out_dir) / 'merged_16bit'}")
