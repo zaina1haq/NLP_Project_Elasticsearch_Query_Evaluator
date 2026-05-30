@@ -1,23 +1,3 @@
-"""
-generate_dataset_v2.py
-======================
-Improved Reuters Elasticsearch query evaluation dataset generator.
-
-Key improvements over v1:
-  - Multi-dimensional rubric covering 4 independent criteria
-  - Rationales that explicitly cite rubric criteria by name
-  - Balanced score distribution (0–4) across ALL query categories
-  - Diverse, paraphrased task phrasings (not formulaic)
-  - Hard negatives (score 0) that look plausible, not just match_all
-  - Full score coverage per category (no missing score levels)
-  - Score-2 examples for nested queries
-  - Score-3 examples for date range queries
-
-Run:
-    python generate_dataset_v2.py
-    python generate_dataset_v2.py --data_dir /path/to/data --out_dir /path/to/output
-"""
-
 import json
 import copy
 import random
@@ -26,7 +6,7 @@ import glob
 import os
 from collections import Counter
 
-# ─── CLI args ────────────────────────────────────────────────────────────────
+# Configure runtime parameters, initialize reproducibility settings, and prepare the output environment for dataset generation
 parser = argparse.ArgumentParser()
 parser.add_argument("--data_dir", default="Raw_data")
 parser.add_argument("--out_dir",  default="json_format")
@@ -38,7 +18,7 @@ args = parser.parse_args()
 random.seed(args.seed)
 os.makedirs(args.out_dir, exist_ok=True)
 
-# ─── 1. Load documents ───────────────────────────────────────────────────────
+# 1. Load and aggregate Reuters documents from all source files to create the corpus used for dataset generation
 print(f"Loading documents from: {args.data_dir}")
 all_docs = []
 for path in sorted(glob.glob(os.path.join(args.data_dir, "reut2-*.json"))):
@@ -46,7 +26,8 @@ for path in sorted(glob.glob(os.path.join(args.data_dir, "reut2-*.json"))):
         all_docs.extend(json.load(f))
 print(f"  Loaded {len(all_docs)} documents")
 
-# ─── 2. Mine real values ─────────────────────────────────────────────────────
+# 2. Extract and analyze the most frequent topics, locations, and country codes from the Reuters corpus 
+# to generate realistic query values for the evaluation dataset
 topics_counter    = Counter()
 places_counter    = Counter()
 countries_counter = Counter()
@@ -64,9 +45,8 @@ print(f"  Top topics   : {TOP_TOPICS}")
 print(f"  Top places   : {TOP_PLACES}")
 print(f"  Top countries: {TOP_COUNTRIES}")
 
-# ─── 3. Multi-dimensional rubric ─────────────────────────────────────────────
-# Each score level is defined across FOUR independent criteria so the model
-# can ground its rationale in specific dimensions, not vague impressions.
+# 3. Define a structured scoring rubric that evaluates Elasticsearch submissions
+# across query structure, field validity, operator correctness, and task alignment
 RUBRIC = {
     "0": (
         "Score 0 — Completely invalid: "
@@ -124,8 +104,8 @@ RUBRIC = {
     ),
 }
 
-# ─── 4. Task phrasing pools (diversity) ──────────────────────────────────────
-# Multiple phrasings per intent so tasks aren't all "Find all documents X"
+# 4. Define diverse natural language task templates to generate realistic
+# Elasticsearch search requests across multiple query categories
 def pick(pool): return random.choice(pool)
 
 def content_match_tasks(term):
@@ -182,7 +162,8 @@ def multimatch_tasks(term):
         f'Multi-field search for "{term}" covering title and content.',
     ]
 
-# ─── 5. Error-injection helpers ──────────────────────────────────────────────
+# 5. Define error injection utilities that generate realistic query mistakes
+# to create diverse evaluation examples across different score levels
 FIELD_TYPOS = {
     "title":        "headline",
     "content":      "body",
@@ -231,7 +212,8 @@ PLAUSIBLE_BROKEN = [
 def broken_score0():
     return random.choice(PLAUSIBLE_BROKEN)
 
-# ─── 6. Dataset builder ──────────────────────────────────────────────────────
+# 6. Initialize the dataset structure and define helper functions for storing
+# labeled examples and generating rubric-based evaluation rationales
 dataset = []
 
 def add(task, reference, submission, score, rationale):
@@ -250,9 +232,8 @@ def R(score, *points):
     return f"[Score {score}] " + " | ".join(points)
 
 
-# ════════════════════════════════════════════════════════════════════
-# 5a. match on content  (scores 0–4 covered)
-# ════════════════════════════════════════════════════════════════════
+# 5a. Generate content-based query evaluation examples covering all score levels
+# from fully correct queries to realistic structural and semantic errors
 for term in TOP_TOPICS[:6]:
     ref = {"query": {"match": {"content": term}}}
 
@@ -309,13 +290,12 @@ for term in TOP_TOPICS[:6]:
           "[Task Alignment] This query would either fail to parse or return completely unrelated results."))
 
 
-# ════════════════════════════════════════════════════════════════════
-# 5b. term on topics keyword field  (scores 0–4)
-# ════════════════════════════════════════════════════════════════════
+# 5b. Generate topic-filtering query examples using exact keyword matching
+# and controlled errors to represent scores from 0 to 4
 for topic in TOP_TOPICS[:5]:
     ref = {"query": {"term": {"topics": topic}}}
 
-    # 4
+    # 4 - fully correct topic-filtering query
     add(pick(topic_tasks(topic)), ref, ref, 4,
         R(4,
           "[Query Structure] Correct term query at the query level.",
@@ -359,9 +339,8 @@ for topic in TOP_TOPICS[:5]:
           "[Task Alignment] Would throw a parse error or return completely irrelevant documents."))
 
 
-# ════════════════════════════════════════════════════════════════════
-# 5c. date range  (scores 0–4, now including score 3)
-# ════════════════════════════════════════════════════════════════════
+# 5c. Generate date range query examples with controlled boundary, operator,
+# field, and structural errors to cover all evaluation score levels
 date_cases = [
     ("published on or after 1987-03-01",  {"gte": "1987-03-01"}),
     ("published before 1987-06-01",       {"lte": "1987-06-01"}),
@@ -423,9 +402,9 @@ for desc, range_val in date_cases:
           "[Task Alignment] Would fail to parse or return entirely irrelevant documents."))
 
 
-# ════════════════════════════════════════════════════════════════════
-# 5d. bool (must + filter)  (scores 0–4)
-# ════════════════════════════════════════════════════════════════════
+# 5d. Generate Boolean query evaluation examples that combine content matching
+# with filtering constraints while introducing logical and structural variations
+# to represent all rubric score levels
 bool_cases = [
     {
         "task_pool": [
@@ -543,9 +522,8 @@ for case in bool_cases:
           "[Task Alignment] Would fail to parse or return completely irrelevant documents with no filtering."))
 
 
-# ════════════════════════════════════════════════════════════════════
-# 5e. sorting  (scores 0–4)
-# ════════════════════════════════════════════════════════════════════
+# 5e. Generate sorting query examples that evaluate correct date ordering
+# and introduce missing, reversed, invalid, or malformed sort configurations
 sort_cases = [
     {
         "task_pool": [
@@ -623,9 +601,8 @@ for case in sort_cases:
           "[Task Alignment] Completely invalid — would throw a parse error and return no results."))
 
 
-# ════════════════════════════════════════════════════════════════════
-# 5f. nested query on georeferences  (scores 0–4, now including 2)
-# ════════════════════════════════════════════════════════════════════
+# 5f. Generate nested georeference query examples that validate correct nested
+# paths, field usage, and operator selection across all rubric score levels
 for cc in TOP_COUNTRIES[:5]:
     ref = {
         "query": {
@@ -694,9 +671,8 @@ for cc in TOP_COUNTRIES[:5]:
           "[Task Alignment] Would fail to parse or return entirely unrelated documents."))
 
 
-# ════════════════════════════════════════════════════════════════════
-# 5g. countryKeys filter  (scores 0–4)
-# ════════════════════════════════════════════════════════════════════
+# 5g. Generate country code filtering examples that test exact keyword matching
+# on countryKeys while introducing field, operator, and alignment errors
 for country in TOP_COUNTRIES[:6]:
     ref = {"query": {"term": {"countryKeys": country}}}
 
@@ -745,9 +721,8 @@ for country in TOP_COUNTRIES[:6]:
           f"[Task Alignment] Returns all documents in the index with no filtering by country '{country}' — completely fails the task."))
 
 
-# ════════════════════════════════════════════════════════════════════
-# 5h. multi_match  (scores 0–4)
-# ════════════════════════════════════════════════════════════════════
+# 5h. Generate multi-field search examples that evaluate proper multi_match
+# usage across title and content while introducing field and operator errors
 search_terms = [TOP_TOPICS[0], TOP_TOPICS[2], "oil prices", "interest rate", "export"]
 
 for term in search_terms:
@@ -804,7 +779,8 @@ for term in search_terms:
           "[Task Alignment] Would fail to parse or return completely unrelated documents."))
 
 
-# ─── 6. Shuffle & split ──────────────────────────────────────────────────────
+# 6. Randomize the dataset and split it into training, validation, and testing
+# subsets according to the user-defined partition ratios
 random.shuffle(dataset)
 n         = len(dataset)
 train_end = int(args.train_ratio * n)
@@ -816,7 +792,8 @@ splits = {
     "test":  dataset[val_end:]
 }
 
-# ─── 7. Write files ──────────────────────────────────────────────────────────
+# 7. Export the complete dataset and its train, validation, and test splits
+# to JSON files for model training and evaluation
 full_path = os.path.join(args.out_dir, "es_eval_dataset_full.json")
 with open(full_path, "w") as f:
     json.dump(dataset, f, indent=2)
@@ -825,7 +802,8 @@ for name, data in splits.items():
     with open(os.path.join(args.out_dir, f"es_eval_{name}.json"), "w") as f:
         json.dump(data, f, indent=2)
 
-# ─── 8. Summary ──────────────────────────────────────────────────────────────
+# 8. Generate summary statistics to verify dataset size, score distribution,
+# and the completeness of all evaluation score categories
 dist = Counter(e["score"] for e in dataset)
 print(f"\n{'='*55}")
 print(f"Dataset generated: {n} total entries")
@@ -840,9 +818,9 @@ for score in sorted(dist):
 # Verify no score level is missing
 missing = [s for s in range(5) if s not in dist]
 if missing:
-    print(f"\n⚠  WARNING: Missing score levels: {missing}")
+    print(f"\nWARNING: Missing score levels: {missing}")
 else:
-    print(f"\n✓  All score levels 0–4 are represented.")
+    print(f"\nAll score levels 0–4 are represented.")
 
 print(f"\nOutput written to: {os.path.abspath(args.out_dir)}/")
 for name in ["es_eval_dataset_full.json"] + [f"es_eval_{s}.json" for s in splits]:
