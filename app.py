@@ -8,11 +8,11 @@ import torch, json, re
 app = Flask(__name__)
 CORS(app)
 
-# ── Tasks ─────────────────────────────────────────────────────────────────────
+# Tasks
 with open("json_format/es_eval_test.json", "r") as f:
     TASKS = json.load(f)
 
-# ── Load model once ───────────────────────────────────────────────────────────
+# Load model once
 print("Loading model...")
 model, tokenizer = FastLanguageModel.from_pretrained(
     model_name="outputs/finetuned_model/lora_adapter",
@@ -23,7 +23,7 @@ model, tokenizer = FastLanguageModel.from_pretrained(
 FastLanguageModel.for_inference(model)
 print("Model loaded!")
 
-# ── Rubric ────────────────────────────────────────────────────────────────────
+# Rubric
 RUBRIC = {
     "0": "Completely invalid query — wrong top-level keys, no valid operator, would throw a parse error.",
     "1": "Major errors — recognizable query type but fundamentally broken (wrong field name, missing nested wrapper).",
@@ -41,7 +41,7 @@ SYSTEM = (
     "Do not output anything outside the JSON object."
 )
 
-# ── Prompt builder ────────────────────────────────────────────────────────────
+# Prompt builder
 def build_prompt(task_text, reference, submission):
     ref_str = json.dumps(reference, indent=2)
     sub_str = json.dumps(submission, indent=2)
@@ -55,8 +55,7 @@ def build_prompt(task_text, reference, submission):
         f"Evaluate the submission. Respond ONLY with the JSON object, nothing else. [/INST]"
     )
 
-# ── Output parser ─────────────────────────────────────────────────────────────
-# ── Output parser ─────────────────────────────────────────────────────────────
+# Output parser
 _PROMPT_LEAKAGE = [
     "Evaluate the submission and respond with a JSON object.",
     "Evaluate the submission and respond with a JSON object",
@@ -123,7 +122,7 @@ def parse_output(text):
 
     return None, _clean_rationale(text)
 
-# ── Routes ────────────────────────────────────────────────────────────────────
+# Routes
 @app.route("/")
 def home():
     return render_template("index.html")
