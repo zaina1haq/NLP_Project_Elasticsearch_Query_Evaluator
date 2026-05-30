@@ -1,24 +1,3 @@
-"""
-05_post_finetuning_eval.py
-===========================
-Step 5 — Evaluate the FINE-TUNED model on the same test set, then
-produce a full before/after comparison report.
-
-Reads  : formatted/test.jsonl
-         outputs/pre_finetuning_metrics.json
-         outputs/finetuned_model/lora_adapter/   (LoRA weights)
-Writes : outputs/post_finetuning_predictions.json
-         outputs/post_finetuning_metrics.json
-         outputs/comparison_report.json           ← before vs after delta
-
-Run:
-    python 05_post_finetuning_eval.py
-    python 05_post_finetuning_eval.py \
-        --adapter outputs/finetuned_model/lora_adapter \
-        --test_path formatted/test.jsonl \
-        --pre_metrics outputs/pre_finetuning_metrics.json
-"""
-
 import json
 import time
 import re
@@ -26,7 +5,8 @@ import argparse
 from pathlib import Path
 from collections import Counter
 
-# ─── CLI ─────────────────────────────────────────────────────────────────────
+# 1. Configure command-line arguments for loading the fine-tuned adapter,
+# evaluation dataset, baseline metrics, and output settings
 parser = argparse.ArgumentParser()
 parser.add_argument("--adapter",     default="outputs/finetuned_model/lora_adapter",
                     help="Path to the saved LoRA adapter folder")
@@ -39,13 +19,13 @@ args = parser.parse_args()
 
 Path(args.out_dir).mkdir(parents=True, exist_ok=True)
 
-# ─── 1. Load test set ────────────────────────────────────────────────────────
+# 2. Load the test dataset used to evaluate the fine-tuned model
 print(f"Loading test set from: {args.test_path}")
 with open(args.test_path) as f:
     test_items = [json.loads(line) for line in f]
 print(f"  {len(test_items)} test examples")
 
-# ─── 2. Load pre-finetuning baseline metrics ─────────────────────────────────
+# 3. Load the pre-fine-tuning baseline metrics for before-and-after comparison
 print(f"\nLoading baseline metrics from: {args.pre_metrics}")
 with open(args.pre_metrics) as f:
     pre = json.load(f)
@@ -53,13 +33,13 @@ print(f"  Baseline accuracy : {pre['accuracy']:.4f}")
 print(f"  Baseline MAE      : {pre['mae']:.4f}")
 print(f"  Baseline QWK      : {pre['qwk']:.4f}")
 
-# ─── 3. Load fine-tuned model ────────────────────────────────────────────────
+# 4. Load the base model and attach the trained LoRA adapter for evaluation
 print(f"\nLoading fine-tuned model from adapter: {args.adapter}")
 
 from unsloth import FastLanguageModel
 import torch
 
-# Load the base model first (same config as training)
+# Define the same base model configuration used during fine-tuning
 BASE_MODEL     = "unsloth/mistral-7b-instruct-v0.2-bnb-4bit"
 MAX_SEQ_LENGTH = 2048
 
@@ -70,15 +50,15 @@ model, tokenizer = FastLanguageModel.from_pretrained(
     load_in_4bit   = True,
 )
 
-# Apply the saved LoRA adapter on top
+# Apply the saved LoRA adapter weights on top of the base model
 from peft import PeftModel
 model = PeftModel.from_pretrained(model, args.adapter)
 
-# Switch to inference mode — disables dropout, enables Unsloth's fast path
+# Enable optimized inference behavior and disable training-specific operations
 FastLanguageModel.for_inference(model)
 print("  Fine-tuned model loaded and ready for inference.")
 
-# ─── 4. Score parser (same as Step 3) ────────────────────────────────────────
+# 5. Define a robust parser to extract scores and rationales from model outputs
 def parse_model_output(raw_text: str):
     """
     Extract score and rationale from the model's raw output.
@@ -115,7 +95,7 @@ def parse_model_output(raw_text: str):
 
     return None, text, False
 
-# ─── 5. Run inference ────────────────────────────────────────────────────────
+# 6. Run inference on the test set and collect model predictions
 print(f"\nRunning inference on {len(test_items)} examples …\n")
 
 results = []
@@ -124,6 +104,7 @@ t_start = time.time()
 for idx, item in enumerate(test_items):
     prompt = item["prompt_only"]
 
+    # Tokenize the prompt and move input tensors to the model device
     inputs = tokenizer(
         prompt,
         return_tensors = "pt",
@@ -131,6 +112,7 @@ for idx, item in enumerate(test_items):
         max_length     = MAX_SEQ_LENGTH,
     ).to(model.device)
 
+    # Generate a deterministic model response without updating gradients
     with torch.no_grad():
         output_ids = model.generate(
             **inputs,
@@ -140,6 +122,7 @@ for idx, item in enumerate(test_items):
             pad_token_id   = tokenizer.eos_token_id,
         )
 
+    # Decode only the generated response tokens, excluding the original prompt
     generated = tokenizer.decode(
         output_ids[0][inputs["input_ids"].shape[1]:],
         skip_special_tokens = True,
@@ -147,6 +130,7 @@ for idx, item in enumerate(test_items):
 
     predicted_score, rationale, parse_ok = parse_model_output(generated)
 
+    # Store the prediction result with ground-truth information for evaluation
     result = {
         "idx":                 idx,
         "task":                item["task"],
@@ -158,6 +142,7 @@ for idx, item in enumerate(test_items):
     }
     results.append(result)
 
+    # Print a compact progress update for each evaluated example
     gt    = item["score"]
     pred  = predicted_score if predicted_score is not None else "?"
     match = "✓" if predicted_score == gt else "✗"
@@ -166,7 +151,7 @@ for idx, item in enumerate(test_items):
 
 total_time = time.time() - t_start
 
-# ─── 6. Compute metrics ──────────────────────────────────────────────────────
+# 7. Compute post-fine-tuning evaluation metrics and per-score accuracy
 def compute_metrics(results, phase, adapter_path):
     valid          = [r for r in results if r["predicted_score"] is not None]
     n_valid        = len(valid)
@@ -195,7 +180,7 @@ def compute_metrics(results, phase, adapter_path):
     den      = sum(W[i][j]*exp[i][j]  for i in range(K) for j in range(K))
     qwk      = 1 - (num/den) if den else 0.0
 
-    # Per-score breakdown: how many correct per score level
+    # Compute accuracy separately for each rubric score level
     per_score = {}
     for s in range(5):
         gt_s      = [r for r in valid if r["ground_truth"] == s]
@@ -224,7 +209,7 @@ def compute_metrics(results, phase, adapter_path):
 
 post = compute_metrics(results, "post_finetuning", args.adapter)
 
-# ─── 7. Build comparison report ───────────────────────────────────────────────
+# 8. Build a structured comparison report between baseline and fine-tuned results
 def delta_str(post_val, pre_val, higher_better=True):
     """Format a metric delta with direction arrow."""
     d = post_val - pre_val
@@ -266,7 +251,7 @@ comparison = {
     }
 }
 
-# ─── 8. Print report ─────────────────────────────────────────────────────────
+# 9. Print a before-and-after evaluation report for model performance analysis
 print("\n" + "="*60)
 print("BEFORE vs AFTER FINE-TUNING — COMPARISON REPORT")
 print("="*60)
@@ -301,7 +286,7 @@ print(f"\n  Parse failures — Before: {pre['parse_failures']}  "
 print(f"  Inference time — {post['inference_seconds']}s total  "
       f"({post['inference_seconds']/post['n_total']:.1f}s per example)")
 
-# ─── 9. Save all outputs ─────────────────────────────────────────────────────
+# 10. Save predictions, metrics, and comparison outputs for the final report
 paths = {
     "post_finetuning_predictions.json": results,
     "post_finetuning_metrics.json":     post,
@@ -311,9 +296,9 @@ for filename, data in paths.items():
     p = Path(args.out_dir) / filename
     with open(p, "w") as f:
         json.dump(data, f, indent=2)
-    print(f"\nSaved → {p}")
+    print(f"\nSaved -> {p}")
 
-print("\nAll done. You now have everything needed for Step 6 (the report).")
+print("\nAll done. We now have everything needed for Step 6 (the report).")
 print("Key files for your report:")
 print("  outputs/pre_finetuning_metrics.json")
 print("  outputs/post_finetuning_metrics.json")
