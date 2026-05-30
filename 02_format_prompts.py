@@ -1,29 +1,10 @@
-"""
-02_format_prompts.py
-=====================
-Step 2 — Format the labeled dataset into Mistral instruction-tuning prompts.
-
-Reads  : es_eval_train.json / es_eval_val.json / es_eval_test.json
-Writes : formatted/train.jsonl / formatted/val.jsonl / formatted/test.jsonl
-
-Each output line is a JSON object with one key:
-    "text" : the full <s>[INST]…[/INST] … </s> string
-
-The test split keeps both the formatted "text" AND the raw fields so that
-evaluation scripts can compare predicted vs ground-truth score without
-having to reload the original JSON.
-
-Run:
-    python 02_format_prompts.py
-    python 02_format_prompts.py --data_dir /path/to/splits --out_dir /path/to/formatted
-"""
-
 import json
 import argparse
 import os
 from pathlib import Path
 
-# ─── CLI ─────────────────────────────────────────────────────────────────────
+# 1. Configure command-line parameters and prepare the output directory
+# for converting dataset files into the JSONL training format
 parser = argparse.ArgumentParser()
 
 parser.add_argument("--data_dir", default="json_format",
@@ -40,14 +21,14 @@ args = parser.parse_args()
 
 Path(args.out_dir).mkdir(parents=True, exist_ok=True)
 
-# ─── Mistral special tokens ───────────────────────────────────────────────────
+# 2. Define Mistral-specific special tokens used to structure prompts
+# and mark instruction boundaries during fine-tuning
 BOS  = "<s>"
 EOS  = "</s>"
 B_INST, E_INST = "[INST]", "[/INST]"
 
-# ─── System preamble (injected once inside the first [INST] block) ────────────
-# Mistral-Instruct v0.2 has no dedicated system-token; the convention is to
-# embed the system message as the very first line of the [INST] block.
+# 3. Define the system prompt that instructs the model to evaluate
+# Elasticsearch queries and generate structured rubric-based assessments
 SYSTEM = (
     "You are an expert Elasticsearch query evaluator. "
     "Given a task description, a reference (correct) query, a student submission, "
@@ -61,7 +42,8 @@ SYSTEM = (
     "Do not output anything outside the JSON object."
 )
 
-# ─── Rubric formatter ─────────────────────────────────────────────────────────
+# 4. Format the evaluation rubric into a compact prompt-friendly representation
+# while limiting its length to fit within the model's context window
 def format_rubric(rubric: dict, max_chars: int) -> str:
     """
     Render the rubric as a compact numbered list.
@@ -76,7 +58,8 @@ def format_rubric(rubric: dict, max_chars: int) -> str:
         lines.append(f"  {level}: {text}")
     return "\n".join(lines)
 
-# ─── Single-entry formatter ───────────────────────────────────────────────────
+# 5. Define helper functions for constructing training prompts, formatting
+# expected outputs, and assembling examples in the Mistral instruction format
 def build_prompt(entry: dict, max_rubric_chars: int) -> str:
     """
     Build the instruction portion of the prompt (everything inside [INST]…[/INST]).
@@ -114,7 +97,8 @@ def build_full_text(entry: dict, max_rubric_chars: int) -> str:
     response    = build_expected_output(entry)
     return f"{BOS}{B_INST} {instruction} {E_INST} {response}{EOS}"
 
-# ─── Process splits ──────────────────────────────────────────────────────────
+# 6. Convert each dataset split into JSONL records for fine-tuning while
+# preserving raw evaluation fields only for the test split
 SPLITS = {
     "train": False,   # train/val: only the formatted text is needed
     "val":   False,
@@ -128,7 +112,7 @@ for split, keep_raw in SPLITS.items():
     out_path = os.path.join(args.out_dir,  f"{split}.jsonl")
 
     if not os.path.exists(in_path):
-        print(f"  ⚠  {in_path} not found — skipping {split} split.")
+        print(f"{in_path} not found — skipping {split} split.")
         continue
 
     with open(in_path) as f:
@@ -168,12 +152,13 @@ for split, keep_raw in SPLITS.items():
         "avg_tokens_est": round(avg_tok),
         "max_tokens_est": max_tok,
     }
-    print(f"  ✓  {split:5s} → {out_path}  "
+    print(f"{split:5s} → {out_path}  "
           f"({len(entries)} examples, "
           f"avg ~{round(avg_tok)} tokens, "
           f"max ~{max_tok} tokens)")
 
-# ─── Sanity-check: print one formatted example ───────────────────────────────
+# 7. Display a sample formatted training example to verify the generated
+# prompt structure and expected model response before fine-tuning
 print("\n" + "=" * 60)
 print("SAMPLE FORMATTED ENTRY (train split, first example)")
 print("=" * 60)
@@ -193,15 +178,15 @@ if os.path.exists(sample_path):
     else:
         print(text[:1500])
 
-# ─── Token length warnings ───────────────────────────────────────────────────
+# 8. Report dataset token statistics to verify context length constraints
+# and confirm successful generation of the formatted training files
 print("\n" + "=" * 60)
 print("TOKEN LENGTH SUMMARY (estimated, ÷4 chars/token)")
 print("=" * 60)
 for split, s in stats.items():
-    flag = "  ⚠  exceeds 2048!" if s["max_tokens_est"] > 2048 else ""
+    flag = "exceeds 2048!" if s["max_tokens_est"] > 2048 else ""
     print(f"  {split:5s}  n={s['n']:4d}  "
           f"avg={s['avg_tokens_est']:4d}  "
           f"max={s['max_tokens_est']:4d}{flag}")
 
 print(f"\nFormatted files written to: {os.path.abspath(args.out_dir)}/")
-print("Next step: run 03_baseline_eval.py")
